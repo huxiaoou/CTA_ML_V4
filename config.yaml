@@ -172,6 +172,12 @@ universe:
 available:
   win: 10
   amount_threshold: 100000.00
+trn:
+  wins: [ 20, 30, 60 ]
+prd:
+  wins: [ 5, 10 ]
+sim:
+  wins: [ 1 ]
 
 CONST:
   COST: 0.0003

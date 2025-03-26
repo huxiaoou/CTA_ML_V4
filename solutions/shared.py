@@ -1,6 +1,6 @@
 import os
 from husfort.qsqlite import CDbStruct, CSqlTable, CSqlVar
-from typedef import TReturnClass, TRets, TFactorClass, TFactors
+from typedef import TReturnClass, CRet, TFactorClass, TFactors
 
 
 # ----------------------------------------
@@ -51,23 +51,23 @@ def gen_test_returns_by_instru_db(
         instru: str,
         test_returns_by_instru_dir: str,
         save_id: TReturnClass,
-        rets: TRets,
+        ret: CRet,
 ) -> CDbStruct:
     """
 
     :param instru: 'RB.SHFE'
     :param test_returns_by_instru_dir: test_returns_by_instru_dir
     :param save_id: 'Opn' or 'Cls'
-    :param rets:
+    :param ret:
     :return:
     """
     return CDbStruct(
         db_save_dir=os.path.join(test_returns_by_instru_dir, save_id),
         db_name=f"{instru}.db",
         table=CSqlTable(
-            name="test_return",
+            name=ret.ret_name,
             primary_keys=[CSqlVar("trade_date", "TEXT")],
-            value_columns=[CSqlVar("ticker", "TEXT")] + [CSqlVar(ret.ret_name, "REAL") for ret in rets],
+            value_columns=[CSqlVar("ticker", "TEXT"), CSqlVar(ret.ret_name, "REAL")],
         )
     )
 
@@ -75,13 +75,13 @@ def gen_test_returns_by_instru_db(
 def gen_test_returns_avlb_db(
         test_returns_avlb_dir: str,
         save_id: TReturnClass,
-        rets: TRets,
+        ret: CRet,
 ) -> CDbStruct:
     """
 
     :param test_returns_avlb_dir: 'raw' or 'neu'
     :param save_id: 'Opn' or 'Cls'
-    :param rets:
+    :param ret:
     :return:
     """
 
@@ -89,9 +89,9 @@ def gen_test_returns_avlb_db(
         db_save_dir=test_returns_avlb_dir,
         db_name=f"{save_id}.db",
         table=CSqlTable(
-            name="test_return",
+            name=ret.ret_name,
             primary_keys=[CSqlVar("trade_date", "TEXT"), CSqlVar("instrument", "TEXT")],
-            value_columns=[CSqlVar(ret.ret_name, "REAL") for ret in rets],
+            value_columns=[CSqlVar(ret.ret_name, "REAL")],
         )
     )
 

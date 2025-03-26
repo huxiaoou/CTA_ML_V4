@@ -1,6 +1,7 @@
 import yaml
 from husfort.qsqlite import CDbStruct, CSqlTable
 from typedef import TUniverse, TInstruName, CCfgInstru, CCfgAvlbUnvrs, CCfgMktIdx, CCfgConst
+from typedef import CCfgTrn, CCfgPrd, CCfgSim
 from typedef import CCfgProj, CCfgDbStruct
 
 # ---------- project configuration ----------
@@ -29,6 +30,9 @@ proj_cfg = CCfgProj(
     avlb_unvrs=CCfgAvlbUnvrs(**_config["available"]),
     mkt_idxes=CCfgMktIdx(**_config["mkt_idxes"]),
     const=CCfgConst(**_config["CONST"]),
+    trn=CCfgTrn(**_config["trn"]),
+    prd=CCfgPrd(**_config["prd"]),
+    sim=CCfgSim(**_config["sim"]),
 )
 
 # ---------- databases structure ----------

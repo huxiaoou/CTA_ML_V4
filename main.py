@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
     if args.switch == "available":
         from solutions.available import main_available
-        from shared import get_avlb_db
+        from solutions.shared import get_avlb_db
 
         main_available(
             bgn_date=bgn_date, stp_date=stp_date,
@@ -72,7 +72,7 @@ if __name__ == "__main__":
         )
     elif args.switch == "market":
         from solutions.market import main_market
-        from shared import get_avlb_db, get_market_db
+        from solutions.shared import get_avlb_db, get_market_db
 
         main_market(
             bgn_date=bgn_date, stp_date=stp_date,
@@ -83,3 +83,14 @@ if __name__ == "__main__":
             mkt_idxes=proj_cfg.mkt_idxes.idxes,
             sectors=proj_cfg.const.SECTORS,
         )
+    elif args.switch == "test_return":
+        from solutions.test_return import CTestReturnsByInstru
+
+        for ret in proj_cfg.all_rets:
+            test_return_by_instru = CTestReturnsByInstru(
+                ret=ret,
+                universe=proj_cfg.universe,
+                test_returns_by_instru_dir=proj_cfg.test_returns_by_instru_dir,
+                db_struct_preprocess=db_struct_cfg.preprocess,
+            )
+            test_return_by_instru.main(bgn_date, stp_date, calendar)

@@ -2,6 +2,7 @@ import os
 from typing import NewType
 from enum import StrEnum
 from dataclasses import dataclass
+from itertools import product
 from husfort.qsqlite import CDbStruct
 
 """
@@ -27,8 +28,12 @@ class CRet:
     lag: int
 
     @property
+    def sid(self) -> str:
+        return f"{self.win:03d}L{self.lag:d}"
+
+    @property
     def ret_name(self) -> TReturnName:
-        return TReturnName(f"{self.ret_class}{self.win:03d}L{self.lag:d}")
+        return TReturnName(f"{self.ret_class}{self.sid}")
 
     @property
     def shift(self) -> int:
@@ -165,6 +170,21 @@ class CCfgAvlbUnvrs:
 
 
 @dataclass(frozen=True)
+class CCfgTrn:
+    wins: list[int]
+
+
+@dataclass(frozen=True)
+class CCfgPrd:
+    wins: list[int]
+
+
+@dataclass(frozen=True)
+class CCfgSim:
+    wins: list[int]
+
+
+@dataclass(frozen=True)
 class CCfgConst:
     COST: float
     SECTORS: list[str]
@@ -211,6 +231,18 @@ class CCfgProj:
     avlb_unvrs: CCfgAvlbUnvrs
     mkt_idxes: CCfgMktIdx
     const: CCfgConst
+    trn: CCfgTrn
+    prd: CCfgPrd
+    sim: CCfgSim
+
+    @property
+    def test_rets_wins(self) -> list[int]:
+        return self.sim.wins + self.prd.wins
+
+    @property
+    def all_rets(self) -> TRets:
+        return [CRet(ret_class=TReturnClass(rc), win=w, lag=self.const.LAG)
+                for rc, w in product(TReturnClass, self.test_rets_wins)]
 
     @property
     def available_dir(self) -> str:
