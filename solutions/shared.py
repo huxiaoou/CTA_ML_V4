@@ -50,19 +50,19 @@ def get_market_db(market_dir: str) -> CDbStruct:
 def gen_test_returns_by_instru_db(
         instru: str,
         test_returns_by_instru_dir: str,
-        save_id: TReturnClass,
+        ret_class: TReturnClass,
         ret: CRet,
 ) -> CDbStruct:
     """
 
     :param instru: 'RB.SHFE'
     :param test_returns_by_instru_dir: test_returns_by_instru_dir
-    :param save_id: 'Opn' or 'Cls'
+    :param ret_class: 'Opn' or 'Cls'
     :param ret:
     :return:
     """
     return CDbStruct(
-        db_save_dir=os.path.join(test_returns_by_instru_dir, save_id),
+        db_save_dir=os.path.join(test_returns_by_instru_dir, ret_class),
         db_name=f"{instru}.db",
         table=CSqlTable(
             name=ret.ret_name,
@@ -74,20 +74,20 @@ def gen_test_returns_by_instru_db(
 
 def gen_test_returns_avlb_db(
         test_returns_avlb_dir: str,
-        save_id: TReturnClass,
+        ret_class: TReturnClass,
         ret: CRet,
 ) -> CDbStruct:
     """
 
     :param test_returns_avlb_dir: 'raw' or 'neu'
-    :param save_id: 'Opn' or 'Cls'
+    :param ret_class: 'Opn' or 'Cls'
     :param ret:
     :return:
     """
 
     return CDbStruct(
         db_save_dir=test_returns_avlb_dir,
-        db_name=f"{save_id}.db",
+        db_name=f"{ret_class}.db",
         table=CSqlTable(
             name=ret.ret_name,
             primary_keys=[CSqlVar("trade_date", "TEXT"), CSqlVar("instrument", "TEXT")],
@@ -99,19 +99,19 @@ def gen_test_returns_avlb_db(
 def gen_factors_by_instru_db(
         instru: str,
         factors_by_instru_dir: str,
-        save_id: TFactorClass,
+        factor_class: TFactorClass,
         factors: TFactors,
 ) -> CDbStruct:
     """
 
     :param instru: 'RB.SHFE'
     :param factors_by_instru_dir: factors_by_instru_dir
-    :param save_id:
+    :param factor_class:
     :param factors:
     :return:
     """
     return CDbStruct(
-        db_save_dir=os.path.join(factors_by_instru_dir, save_id),
+        db_save_dir=os.path.join(factors_by_instru_dir, factor_class),
         db_name=f"{instru}.db",
         table=CSqlTable(
             name="factor",
@@ -123,20 +123,20 @@ def gen_factors_by_instru_db(
 
 def gen_factors_avlb_db(
         factors_avlb_dir: str,
-        save_id: TFactorClass,
+        factor_class: TFactorClass,
         factors: TFactors,
 ) -> CDbStruct:
     """
 
     :param factors_avlb_dir: 'raw' or 'neu'
-    :param save_id:
+    :param factor_class:
     :param factors:
     :return:
     """
 
     return CDbStruct(
         db_save_dir=factors_avlb_dir,
-        db_name=f"{save_id}.db",
+        db_name=f"{factor_class}.db",
         table=CSqlTable(
             name="factor",
             primary_keys=[CSqlVar("trade_date", "TEXT"), CSqlVar("instrument", "TEXT")],

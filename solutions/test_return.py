@@ -61,7 +61,7 @@ class CTestReturnsByInstru:
         db_struct_instru = gen_test_returns_by_instru_db(
             instru=instru,
             test_returns_by_instru_dir=self.test_returns_by_instru_dir,
-            save_id=self.ret.ret_class,
+            ret_class=self.ret.ret_class,
             ret=self.ret,
         )
         check_and_makedirs(db_struct_instru.db_save_dir)
@@ -105,7 +105,7 @@ class CTestReturnsAvlb:
         db_struct_ref = gen_test_returns_by_instru_db(
             instru=instru,
             test_returns_by_instru_dir=self.test_returns_by_instru_dir,
-            save_id=self.ret.ret_class,
+            ret_class=self.ret.ret_class,
             ret=self.ret,
         )
         sqldb = CMgrSqlDb(
@@ -164,7 +164,7 @@ class CTestReturnsAvlb:
 
         db_struct_instru = gen_test_returns_avlb_db(
             test_returns_avlb_dir=test_returns_avlb_dir,
-            save_id=self.ret.ret_class,
+            ret_class=self.ret.ret_class,
             ret=self.ret,
         )
         check_and_makedirs(db_struct_instru.db_save_dir)

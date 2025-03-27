@@ -76,7 +76,7 @@ TFactors = list[CFactor]
 
 
 @dataclass(frozen=True)
-class __CCfgFactorGrp:
+class CCfgFactorGrp:
     @property
     def factor_class(self) -> TFactorClass:
         raise NotImplementedError
@@ -92,7 +92,7 @@ class __CCfgFactorGrp:
 
 
 @dataclass(frozen=True)
-class __CCfgFactorGrpWin(__CCfgFactorGrp):
+class CCfgFactorGrpWin(CCfgFactorGrp):
     wins: list[int]
 
     @property
@@ -100,19 +100,19 @@ class __CCfgFactorGrpWin(__CCfgFactorGrp):
         return TFactorNames([TFactorName(f"{self.factor_class}{w:03d}") for w in self.wins])
 
 
-class CCfgFactorGrpMTM(__CCfgFactorGrpWin):
+class CCfgFactorGrpMTM(CCfgFactorGrpWin):
     @property
     def factor_class(self) -> TFactorClass:
         return TFactorClass("MTM")
 
 
-class CCfgFactorGrpSKEW(__CCfgFactorGrpWin):
+class CCfgFactorGrpSKEW(CCfgFactorGrpWin):
     @property
     def factor_class(self) -> TFactorClass:
         return TFactorClass("SKEW")
 
 
-class CCfgFactorGrpKURT(__CCfgFactorGrpWin):
+class CCfgFactorGrpKURT(CCfgFactorGrpWin):
     @property
     def factor_class(self) -> TFactorClass:
         return TFactorClass("KURT")
