@@ -4,6 +4,7 @@ from enum import StrEnum
 from dataclasses import dataclass
 from itertools import product
 from husfort.qsqlite import CDbStruct
+from husfort.qcalendar import CCalendar
 
 """
 ----------------------------
@@ -91,31 +92,76 @@ class CCfgFactorGrp:
         return TFactors(res)
 
 
+"""
+--- CCfgFactorGrp with Arguments   ---
+--- User may not use them directly ---
+"""
+
+
 @dataclass(frozen=True)
-class CCfgFactorGrpWin(CCfgFactorGrp):
+class _CCfgFactorGrpWin(CCfgFactorGrp):
     wins: list[int]
 
     @property
     def factor_names(self) -> TFactorNames:
         return TFactorNames([TFactorName(f"{self.factor_class}{w:03d}") for w in self.wins])
 
+    def buffer_bgn_date(self, bgn_date: str, calendar: CCalendar, shift: int = -5) -> str:
+        return calendar.get_next_date(bgn_date, -max(self.wins) + shift)
 
-class CCfgFactorGrpMTM(CCfgFactorGrpWin):
+
+"""
+--- CfgFactorGrp for factors    ---
+--- Define this for each factor ---
+"""
+
+
+class CCfgFactorGrpMTM(_CCfgFactorGrpWin):
     @property
     def factor_class(self) -> TFactorClass:
         return TFactorClass("MTM")
 
 
-class CCfgFactorGrpSKEW(CCfgFactorGrpWin):
+class CCfgFactorGrpSKEW(_CCfgFactorGrpWin):
     @property
     def factor_class(self) -> TFactorClass:
         return TFactorClass("SKEW")
 
 
-class CCfgFactorGrpKURT(CCfgFactorGrpWin):
+class CCfgFactorGrpKURT(_CCfgFactorGrpWin):
     @property
     def factor_class(self) -> TFactorClass:
         return TFactorClass("KURT")
+
+
+class CCfgFactorGrpRS(_CCfgFactorGrpWin):
+    @property
+    def factor_class(self) -> TFactorClass:
+        return TFactorClass("RS")
+
+    def name_rspa(self, w: int) -> str:
+        return f"{self.factor_class}PA{w:03d}"
+
+    def name_rsla(self, w: int) -> str:
+        return f"{self.factor_class}LA{w:03d}"
+
+    def name_diff(self) -> str:
+        return f"{self.factor_class}DIF"
+
+    @property
+    def factor_names(self) -> TFactorNames:
+        rspa = [TFactorName(self.name_rspa(w)) for w in self.wins]
+        rsla = [TFactorName(self.name_rsla(w)) for w in self.wins]
+        rsdif = [TFactorName(self.name_diff())]
+        return TFactorNames(rspa + rsla + rsdif)
+
+
+@dataclass(frozen=True)
+class CCfgFactors:
+    MTM: CCfgFactorGrpMTM | None
+    SKEW: CCfgFactorGrpSKEW | None
+    KURT: CCfgFactorGrpKURT | None
+    RS: CCfgFactorGrpRS | None
 
 
 """
@@ -234,6 +280,7 @@ class CCfgProj:
     trn: CCfgTrn
     prd: CCfgPrd
     sim: CCfgSim
+    factors: dict
 
     @property
     def test_rets_wins(self) -> list[int]:

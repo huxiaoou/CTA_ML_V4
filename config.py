@@ -3,6 +3,8 @@ from husfort.qsqlite import CDbStruct, CSqlTable
 from typedef import TUniverse, TInstruName, CCfgInstru, CCfgAvlbUnvrs, CCfgMktIdx, CCfgConst
 from typedef import CCfgTrn, CCfgPrd, CCfgSim
 from typedef import CCfgProj, CCfgDbStruct
+from typedef import (CCfgFactors,
+                     CCfgFactorGrpMTM, CCfgFactorGrpSKEW, CCfgFactorGrpKURT, CCfgFactorGrpRS)
 
 # ---------- project configuration ----------
 
@@ -33,6 +35,7 @@ proj_cfg = CCfgProj(
     trn=CCfgTrn(**_config["trn"]),
     prd=CCfgPrd(**_config["prd"]),
     sim=CCfgSim(**_config["sim"]),
+    factors=_config["factors"],
 )
 
 # ---------- databases structure ----------
@@ -80,6 +83,14 @@ db_struct_cfg = CCfgDbStruct(
         db_name=_db_struct["fMinuteBar"]["db_name"],
         table=CSqlTable(cfg=_db_struct["fMinuteBar"]["table"]),
     ),
+)
+
+# --- factors ---
+cfg_factors = CCfgFactors(
+    MTM=CCfgFactorGrpMTM(**proj_cfg.factors["MTM"]),
+    SKEW=CCfgFactorGrpSKEW(**proj_cfg.factors["SKEW"]),
+    KURT=CCfgFactorGrpKURT(**proj_cfg.factors["KURT"]),
+    RS=CCfgFactorGrpRS(**proj_cfg.factors["RS"]),
 )
 
 if __name__ == "__main__":
