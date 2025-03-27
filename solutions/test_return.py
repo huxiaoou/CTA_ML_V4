@@ -1,9 +1,11 @@
 import pandas as pd
 from rich.progress import track
+from typing import Literal
+from loguru import logger
 from husfort.qutility import SFG, check_and_makedirs
 from husfort.qcalendar import CCalendar
 from husfort.qsqlite import CDbStruct, CMgrSqlDb
-from solutions.shared import gen_test_returns_by_instru_db
+from solutions.shared import gen_test_returns_by_instru_db, gen_test_returns_avlb_db
 from typedef import TUniverse, CRet, TReturnClass
 
 
@@ -81,108 +83,124 @@ class CTestReturnsByInstru:
             self.process_for_instru(instru, bgn_date=bgn_date, stp_date=stp_date, calendar=calendar)
         return 0
 
-# class CTstRetAgg(_CTstRet):
-#     def __init__(
-#             self,
-#             win: int, lag: int,
-#             universe: TUniverse,
-#             db_tst_ret_save_dir: str,
-#             db_struct_avlb: CDbStruct,
-#     ):
-#         super().__init__(win, lag, universe, db_tst_ret_save_dir)
-#         self.db_struct_avlb = db_struct_avlb
-#
-#     @property
-#     def save_id(self) -> str:
-#         return f"{self.win:03d}L{self.lag}"
-#
-#     @property
-#     def ref_id(self) -> str:
-#         return self.save_id
-#
-#     @property
-#     def ref_rets(self) -> list[str]:
-#         return self.rets
-#
-#     @property
-#     def ref_lbl_cls(self) -> str:
-#         return self.ret_lbl_cls
-#
-#     @property
-#     def ref_lbl_opn(self) -> str:
-#         return self.ret_lbl_opn
-#
-#     def load_ref_ret_by_instru(self, instru: str, bgn_date: str, stp_date: str) -> pd.DataFrame:
-#         db_struct_ref = gen_tst_ret_raw_db(
-#             instru=instru,
-#             db_save_root_dir=self.db_tst_ret_save_dir,
-#             save_id=self.ref_id,
-#             rets=self.ref_rets,
-#         )
-#         sqldb = CMgrSqlDb(
-#             db_save_dir=db_struct_ref.db_save_dir,
-#             db_name=db_struct_ref.db_name,
-#             table=db_struct_ref.table,
-#             mode="r"
-#         )
-#         ref_data = sqldb.read_by_range(bgn_date, stp_date)
-#         return ref_data
-#
-#     def load_ref_ret(self, base_bgn_date: str, base_stp_date: str) -> pd.DataFrame:
-#         ref_dfs: list[pd.DataFrame] = []
-#         for instru in self.universe:
-#             df = self.load_ref_ret_by_instru(instru, bgn_date=base_bgn_date, stp_date=base_stp_date)
-#             df["instrument"] = instru
-#             ref_dfs.append(df)
-#         res = pd.concat(ref_dfs, axis=0, ignore_index=False)
-#         res = res.reset_index().sort_values(by=["trade_date"], ascending=True)
-#         res = res[["trade_date", "instrument"] + self.ref_rets]
-#         return res
-#
-#     def load_available(self, base_bgn_date: str, base_stp_date: str) -> pd.DataFrame:
-#         sqldb = CMgrSqlDb(
-#             db_save_dir=self.db_struct_avlb.db_save_dir,
-#             db_name=self.db_struct_avlb.db_name,
-#             table=self.db_struct_avlb.table,
-#             mode="r",
-#         )
-#         avlb_data = sqldb.read_by_range(bgn_date=base_bgn_date, stp_date=base_stp_date)
-#         avlb_data = avlb_data[["trade_date", "instrument", "sectorL1"]]
-#         return avlb_data
-#
-#     def save(self, new_data: pd.DataFrame, calendar: CCalendar):
-#         db_struct_instru = gen_tst_ret_agg_db(
-#             db_save_root_dir=self.db_tst_ret_save_dir,
-#             save_id=self.save_id,
-#             rets=self.rets,
-#         )
-#         check_and_makedirs(db_struct_instru.db_save_dir)
-#         sqldb = CMgrSqlDb(
-#             db_save_dir=db_struct_instru.db_save_dir,
-#             db_name=db_struct_instru.db_name,
-#             table=db_struct_instru.table,
-#             mode="a",
-#         )
-#         if sqldb.check_continuity(new_data["trade_date"].iloc[0], calendar) == 0:
-#             instru_tst_ret_agg_data = new_data[db_struct_instru.table.vars.names]
-#             sqldb.update(update_data=instru_tst_ret_agg_data)
-#         return 0
-#
-#     def main_test_return_agg(self, bgn_date: str, stp_date: str, calendar: CCalendar):
-#         # logger.info(f"Aggregating test return with lag = {SFG(self.lag)}, win = {SFG(self.win)}")
-#         iter_dates = calendar.get_iter_list(bgn_date, stp_date)
-#         base_bgn_date = self.get_base_date(iter_dates[0], calendar)
-#         base_end_date = self.get_base_date(iter_dates[-1], calendar)
-#         base_stp_date = calendar.get_next_date(base_end_date, shift=1)
-#
-#         ref_tst_ret_data = self.load_ref_ret(base_bgn_date, base_stp_date)
-#         available_data = self.load_available(base_bgn_date, base_stp_date)
-#         tst_ret_avlb_data = pd.merge(
-#             left=available_data,
-#             right=ref_tst_ret_data,
-#             on=["trade_date", "instrument"],
-#             how="left",
-#         ).sort_values(by=["trade_date", "sectorL1"])
-#         tst_ret_agg_data = tst_ret_avlb_data.query(f"trade_date >= '{base_bgn_date}' & trade_date <= '{base_stp_date}'")
-#         self.save(tst_ret_agg_data, calendar)
-#         return 0
+
+class CTestReturnsAvlb:
+    def __init__(
+            self,
+            ret: CRet,
+            universe: TUniverse,
+            test_returns_by_instru_dir: str,
+            test_returns_avlb_raw_dir: str,
+            test_returns_avlb_neu_dir: str,
+            db_struct_avlb: CDbStruct,
+    ):
+        self.ret = ret
+        self.universe = universe
+        self.test_returns_by_instru_dir = test_returns_by_instru_dir
+        self.test_returns_avlb_raw_dir = test_returns_avlb_raw_dir
+        self.test_returns_avlb_neu_dir = test_returns_avlb_neu_dir
+        self.db_struct_avlb = db_struct_avlb
+
+    def load_ref_ret_by_instru(self, instru: str, bgn_date: str, stp_date: str) -> pd.DataFrame:
+        db_struct_ref = gen_test_returns_by_instru_db(
+            instru=instru,
+            test_returns_by_instru_dir=self.test_returns_by_instru_dir,
+            save_id=self.ret.ret_class,
+            ret=self.ret,
+        )
+        sqldb = CMgrSqlDb(
+            db_save_dir=db_struct_ref.db_save_dir,
+            db_name=db_struct_ref.db_name,
+            table=db_struct_ref.table,
+            mode="r"
+        )
+        ref_data = sqldb.read_by_range(bgn_date, stp_date)
+        return ref_data
+
+    def load_ref_ret(self, base_bgn_date: str, base_stp_date: str) -> pd.DataFrame:
+        ref_dfs: list[pd.DataFrame] = []
+        for instru in self.universe:
+            df = self.load_ref_ret_by_instru(instru, bgn_date=base_bgn_date, stp_date=base_stp_date)
+            df["instrument"] = instru
+            ref_dfs.append(df)
+        res = pd.concat(ref_dfs, axis=0, ignore_index=False)
+        res = res.reset_index().sort_values(by=["trade_date"], ascending=True)
+        res = res[["trade_date", "instrument", self.ret.ret_name]]
+        return res
+
+    def load_available(self, base_bgn_date: str, base_stp_date: str) -> pd.DataFrame:
+        sqldb = CMgrSqlDb(
+            db_save_dir=self.db_struct_avlb.db_save_dir,
+            db_name=self.db_struct_avlb.db_name,
+            table=self.db_struct_avlb.table,
+            mode="r",
+        )
+        avlb_data = sqldb.read_by_range(bgn_date=base_bgn_date, stp_date=base_stp_date)
+        avlb_data = avlb_data[["trade_date", "instrument", "sectorL1"]]
+        return avlb_data
+
+    def neutralize(self, avlb_raw_data: pd.DataFrame) -> pd.DataFrame:
+        grp_keys = ["trade_date", "sectorL1"]
+        neu_data = avlb_raw_data.groupby(by=grp_keys)[self.ret.ret_name].apply(
+            lambda z: z - z.mean()
+        ).reset_index(level=[0, 1])
+        avlb_neu_data = pd.merge(
+            left=avlb_raw_data[["trade_date", "instrument", "sectorL1"]],
+            right=neu_data[[self.ret.ret_name]],
+            how="inner",
+            left_index=True, right_index=True,
+        )
+        if len(avlb_neu_data) != len(avlb_raw_data):
+            raise ValueError(f"len of raw data = {len(avlb_raw_data)}  != len of neu data = {avlb_neu_data}.")
+        return avlb_neu_data
+
+    def save(self, new_data: pd.DataFrame, calendar: CCalendar, save_type: Literal["raw", "neu"]):
+        if save_type == "raw":
+            test_returns_avlb_dir = self.test_returns_avlb_raw_dir
+        elif save_type == "neu":
+            test_returns_avlb_dir = self.test_returns_avlb_neu_dir
+        else:
+            raise ValueError(f"Invalid save_type {save_type}")
+
+        db_struct_instru = gen_test_returns_avlb_db(
+            test_returns_avlb_dir=test_returns_avlb_dir,
+            save_id=self.ret.ret_class,
+            ret=self.ret,
+        )
+        check_and_makedirs(db_struct_instru.db_save_dir)
+        sqldb = CMgrSqlDb(
+            db_save_dir=db_struct_instru.db_save_dir,
+            db_name=db_struct_instru.db_name,
+            table=db_struct_instru.table,
+            mode="a",
+        )
+        if sqldb.check_continuity(new_data["trade_date"].iloc[0], calendar) == 0:
+            instru_tst_ret_agg_data = new_data[db_struct_instru.table.vars.names]
+            sqldb.update(update_data=instru_tst_ret_agg_data)
+        return 0
+
+    def main(self, bgn_date: str, stp_date: str, calendar: CCalendar):
+        logger.info(f"Calculate available test return ret = {SFG(self.ret.ret_name)}")
+        iter_dates = calendar.get_iter_list(bgn_date, stp_date)
+        base_bgn_date = calendar.get_next_date(iter_dates[0], -self.ret.shift)
+        base_end_date = calendar.get_next_date(iter_dates[-1], -self.ret.shift)
+        base_stp_date = calendar.get_next_date(base_end_date, shift=1)
+
+        # avlb raw
+        ref_tst_ret_data = self.load_ref_ret(base_bgn_date, base_stp_date)
+        available_data = self.load_available(base_bgn_date, base_stp_date)
+        tst_ret_avlb_data = pd.merge(
+            left=available_data,
+            right=ref_tst_ret_data,
+            on=["trade_date", "instrument"],
+            how="left",
+        ).sort_values(by=["trade_date", "sectorL1"])
+        tst_ret_avlb_raw_data = tst_ret_avlb_data.query(
+            f"trade_date >= '{base_bgn_date}' & trade_date <= '{base_stp_date}'")
+        self.save(tst_ret_avlb_raw_data, calendar, save_type="raw")
+
+        # avlb neu
+        logger.info(f"Neutralize available test return ret = {SFG(self.ret.ret_name)}")
+        tst_ret_avlb_neu_data = self.neutralize(tst_ret_avlb_raw_data)
+        self.save(tst_ret_avlb_neu_data, calendar, save_type="neu")
+        return 0

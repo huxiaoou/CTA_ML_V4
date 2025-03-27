@@ -51,6 +51,7 @@ if __name__ == "__main__":
     from config import proj_cfg, db_struct_cfg
     from husfort.qlog import define_logger
     from husfort.qcalendar import CCalendar
+    from solutions.shared import get_avlb_db, get_market_db
 
     define_logger()
 
@@ -60,7 +61,6 @@ if __name__ == "__main__":
 
     if args.switch == "available":
         from solutions.available import main_available
-        from solutions.shared import get_avlb_db
 
         main_available(
             bgn_date=bgn_date, stp_date=stp_date,
@@ -72,7 +72,6 @@ if __name__ == "__main__":
         )
     elif args.switch == "market":
         from solutions.market import main_market
-        from solutions.shared import get_avlb_db, get_market_db
 
         main_market(
             bgn_date=bgn_date, stp_date=stp_date,
@@ -84,13 +83,20 @@ if __name__ == "__main__":
             sectors=proj_cfg.const.SECTORS,
         )
     elif args.switch == "test_return":
-        from solutions.test_return import CTestReturnsByInstru
+        from solutions.test_return import CTestReturnsByInstru, CTestReturnsAvlb
 
         for ret in proj_cfg.all_rets:
-            test_return_by_instru = CTestReturnsByInstru(
-                ret=ret,
-                universe=proj_cfg.universe,
+            test_returns_by_instru = CTestReturnsByInstru(
+                ret=ret, universe=proj_cfg.universe,
                 test_returns_by_instru_dir=proj_cfg.test_returns_by_instru_dir,
                 db_struct_preprocess=db_struct_cfg.preprocess,
             )
-            test_return_by_instru.main(bgn_date, stp_date, calendar)
+            test_returns_by_instru.main(bgn_date, stp_date, calendar)
+            test_returns_avlb = CTestReturnsAvlb(
+                ret=ret, universe=proj_cfg.universe,
+                test_returns_by_instru_dir=proj_cfg.test_returns_by_instru_dir,
+                test_returns_avlb_raw_dir=proj_cfg.test_returns_avlb_raw_dir,
+                test_returns_avlb_neu_dir=proj_cfg.test_returns_avlb_neu_dir,
+                db_struct_avlb=get_avlb_db(proj_cfg.available_dir),
+            )
+            test_returns_avlb.main(bgn_date, stp_date, calendar)
