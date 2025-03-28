@@ -1,8 +1,11 @@
 import numpy as np
 import pandas as pd
+import scipy.stats as sps
 import multiprocessing as mp
+from typing import Literal
+from loguru import logger
 from rich.progress import track, Progress
-from husfort.qutility import SFY, error_handler, check_and_makedirs
+from husfort.qutility import SFG, SFY, error_handler, check_and_makedirs
 from husfort.qsqlite import CDbStruct, CMgrSqlDb
 from husfort.qcalendar import CCalendar
 from typedef import CCfgFactorGrp, TUniverse
@@ -198,4 +201,136 @@ class CFactorsByInstru(_CFactorsByInstruMoreDb):
         else:
             for instru in track(self.universe, description=description):
                 self.process_by_instru(instru, bgn_date, stp_date, calendar)
+        return 0
+
+
+class CFactorsAvlb(_CFactorsByInstruDbOperator):
+    def __init__(
+            self,
+            factor_grp: CCfgFactorGrp,
+            universe: TUniverse,
+            factors_by_instru_dir: str,
+            factors_avlb_raw_dir: str,
+            factors_avlb_neu_dir: str,
+            db_struct_avlb: CDbStruct,
+    ):
+        super().__init__(factor_grp, factors_by_instru_dir)
+        self.universe = universe
+        self.factors_avlb_raw_dir = factors_avlb_raw_dir
+        self.factors_avlb_neu_dir = factors_avlb_neu_dir
+        self.db_struct_avlb = db_struct_avlb
+
+    def load_ref_fac(self, bgn_date: str, stp_date: str) -> pd.DataFrame:
+        ref_dfs: list[pd.DataFrame] = []
+        for instru in self.universe:
+            df = self.load_by_instru(instru, bgn_date=bgn_date, stp_date=stp_date)
+            df["instrument"] = instru
+            ref_dfs.append(df)
+        res = pd.concat(ref_dfs, axis=0, ignore_index=False)
+        res = res.reset_index().sort_values(by=["trade_date"], ascending=True)
+        res = res[["trade_date", "instrument"] + self.factor_grp.factor_names]
+        return res
+
+    def load_available(self, bgn_date: str, stp_date: str) -> pd.DataFrame:
+        sqldb = CMgrSqlDb(
+            db_save_dir=self.db_struct_avlb.db_save_dir,
+            db_name=self.db_struct_avlb.db_name,
+            table=self.db_struct_avlb.table,
+            mode="r",
+        )
+        avlb_data = sqldb.read_by_range(bgn_date=bgn_date, stp_date=stp_date)
+        avlb_data = avlb_data[["trade_date", "instrument", "sectorL1"]]
+        return avlb_data
+
+    def normalize(self, avlb_raw_data: pd.DataFrame, q: float = 0.995) -> pd.DataFrame:
+        def __normalize(data: pd.DataFrame) -> pd.DataFrame:
+            # winsorize
+            k = sps.norm.ppf(q)
+            mu = data.mean()
+            sd = data.std()
+            ub, lb = mu + k * sd, mu - k * sd
+            t = data.copy()
+            for col in data.columns:
+                t[col] = t[col].mask(t[col] > ub[col], other=ub[col])
+                t[col] = t[col].mask(t[col] < lb[col], other=lb[col])
+
+            # normalize
+            z = (t - t.mean()) / t.std()
+            return z
+
+        grp_keys = ["trade_date"]
+        nrm_data = avlb_raw_data.groupby(by=grp_keys)[self.factor_grp.factor_names].apply(
+            __normalize).reset_index(level=0)
+        avlb_nrm_data = pd.merge(
+            left=avlb_raw_data[["trade_date", "instrument", "sectorL1"]],
+            right=nrm_data[self.factor_grp.factor_names],
+            how="inner",
+            left_index=True, right_index=True,
+        )
+        if (l0 := len(avlb_raw_data)) != (l1 := len(avlb_nrm_data)):
+            raise ValueError(f"len of raw data = {l0}  != len of nrm data = {l1}.")
+        return avlb_nrm_data
+
+    def neutralize(self, avlb_raw_data: pd.DataFrame) -> pd.DataFrame:
+        grp_keys = ["trade_date", "sectorL1"]
+        neu_data = avlb_raw_data.groupby(by=grp_keys)[self.factor_grp.factor_names].apply(
+            lambda z: z - z.mean()
+        ).reset_index(level=[0, 1])
+        avlb_neu_data = pd.merge(
+            left=avlb_raw_data[["trade_date", "instrument", "sectorL1"]],
+            right=neu_data[self.factor_grp.factor_names],
+            how="inner",
+            left_index=True, right_index=True,
+        )
+        if (l0 := len(avlb_raw_data)) != (l1 := len(avlb_neu_data)):
+            raise ValueError(f"len of raw data = {l0}  != len of neu data = {l1}.")
+        return avlb_neu_data
+
+    def save(self, new_data: pd.DataFrame, calendar: CCalendar, save_type: Literal["raw", "neu"]):
+        if save_type == "raw":
+            factors_avlb_dir = self.factors_avlb_raw_dir
+        elif save_type == "neu":
+            factors_avlb_dir = self.factors_avlb_neu_dir
+        else:
+            raise ValueError(f"Invalid save_type {save_type}")
+        db_struct_instru = gen_factors_avlb_db(
+            factors_avlb_dir=factors_avlb_dir,
+            factor_class=self.factor_grp.factor_class,
+            factors=self.factor_grp.factors,
+        )
+        check_and_makedirs(db_struct_instru.db_save_dir)
+        sqldb = CMgrSqlDb(
+            db_save_dir=db_struct_instru.db_save_dir,
+            db_name=db_struct_instru.db_name,
+            table=db_struct_instru.table,
+            mode="a",
+        )
+        if sqldb.check_continuity(new_data["trade_date"].iloc[0], calendar) == 0:
+            instru_tst_ret_agg_data = new_data[db_struct_instru.table.vars.names]
+            sqldb.update(update_data=instru_tst_ret_agg_data)
+        return 0
+
+    def main(self, bgn_date: str, stp_date: str, calendar: CCalendar):
+        logger.info(f"Calculate available factor {SFG(self.factor_grp.factor_class)}")
+        # avlb raw
+        ref_fac_data = self.load_ref_fac(bgn_date, stp_date)
+        available_data = self.load_available(bgn_date, stp_date)
+        fac_avlb_raw_data = pd.merge(
+            left=available_data,
+            right=ref_fac_data,
+            on=["trade_date", "instrument"],
+            how="left",
+        ).sort_values(by=["trade_date", "sectorL1"])
+
+        # avlb nrm
+        logger.info(f"Normalize available factor {SFG(self.factor_grp.factor_class)}")
+        fac_avlb_nrm_data = self.normalize(fac_avlb_raw_data)
+        self.save(fac_avlb_nrm_data, calendar, save_type="raw")
+
+        # avlb neu
+        logger.info(f"Neutralize available factor {SFG(self.factor_grp.factor_class)}")
+        fac_avlb_neu_data = self.neutralize(fac_avlb_nrm_data)
+        self.save(fac_avlb_neu_data, calendar, save_type="neu")
+
+        logger.info(f"All done for factor {SFG(self.factor_grp.factor_class)}")
         return 0

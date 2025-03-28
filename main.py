@@ -144,8 +144,22 @@ if __name__ == "__main__":
                     universe=proj_cfg.universe,
                     db_struct_preprocess=db_struct_cfg.preprocess,
                 )
+        else:
+            raise NotImplementedError(f"fclass = {args.fclass}")
 
-        fac.main(
-            bgn_date=bgn_date, stp_date=stp_date, calendar=calendar,
-            call_multiprocess=not args.nomp, processes=args.processes,
-        )
+        if fac is not None:
+            from solutions.factor import CFactorsAvlb
+
+            fac.main(
+                bgn_date=bgn_date, stp_date=stp_date, calendar=calendar,
+                call_multiprocess=not args.nomp, processes=args.processes,
+            )
+            fac_avlb = CFactorsAvlb(
+                factor_grp=cfg,
+                universe=proj_cfg.universe,
+                factors_by_instru_dir=proj_cfg.factors_by_instru_dir,
+                factors_avlb_raw_dir=proj_cfg.factors_avlb_raw_dir,
+                factors_avlb_neu_dir=proj_cfg.factors_avlb_neu_dir,
+                db_struct_avlb=get_avlb_db(proj_cfg.available_dir),
+            )
+            fac_avlb.main(bgn_date, stp_date, calendar)
