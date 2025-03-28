@@ -162,20 +162,20 @@ class CTestReturnsAvlb:
         else:
             raise ValueError(f"Invalid save_type {save_type}")
 
-        db_struct_instru = gen_test_returns_avlb_db(
+        db_struct_ret = gen_test_returns_avlb_db(
             test_returns_avlb_dir=test_returns_avlb_dir,
             ret_class=self.ret.ret_class,
             ret=self.ret,
         )
-        check_and_makedirs(db_struct_instru.db_save_dir)
+        check_and_makedirs(db_struct_ret.db_save_dir)
         sqldb = CMgrSqlDb(
-            db_save_dir=db_struct_instru.db_save_dir,
-            db_name=db_struct_instru.db_name,
-            table=db_struct_instru.table,
+            db_save_dir=db_struct_ret.db_save_dir,
+            db_name=db_struct_ret.db_name,
+            table=db_struct_ret.table,
             mode="a",
         )
         if sqldb.check_continuity(new_data["trade_date"].iloc[0], calendar) == 0:
-            instru_tst_ret_agg_data = new_data[db_struct_instru.table.vars.names]
+            instru_tst_ret_agg_data = new_data[db_struct_ret.table.vars.names]
             sqldb.update(update_data=instru_tst_ret_agg_data)
         return 0
 
@@ -204,3 +204,34 @@ class CTestReturnsAvlb:
         tst_ret_avlb_neu_data = self.neutralize(tst_ret_avlb_raw_data)
         self.save(tst_ret_avlb_neu_data, calendar, save_type="neu")
         return 0
+
+
+class CTestReturnLoader:
+    def __init__(self, ret: CRet, test_returns_avlb_dir):
+        """
+
+        :param ret:
+        :param test_returns_avlb_dir: test_returns_avlb_raw_dir or test_returns_avlb_neu_dir
+        """
+        self.ret = ret
+        self.test_returns_avlb_dir = test_returns_avlb_dir
+
+    @property
+    def value_columns(self) -> list[str]:
+        return ["trade_date", "instrument", self.ret.ret_name]
+
+    def load(self, bgn_date: str, stp_date: str) -> pd.DataFrame:
+        db_struct_ret = gen_test_returns_avlb_db(
+            test_returns_avlb_dir=self.test_returns_avlb_dir,
+            ret_class=self.ret.ret_class,
+            ret=self.ret,
+        )
+        check_and_makedirs(db_struct_ret.db_save_dir)
+        sqldb = CMgrSqlDb(
+            db_save_dir=db_struct_ret.db_save_dir,
+            db_name=db_struct_ret.db_name,
+            table=db_struct_ret.table,
+            mode="r",
+        )
+        data = sqldb.read_by_range(bgn_date, stp_date, value_columns=self.value_columns)
+        return data

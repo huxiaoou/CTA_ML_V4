@@ -9,6 +9,7 @@ from husfort.qutility import SFG, SFY, error_handler, check_and_makedirs
 from husfort.qsqlite import CDbStruct, CMgrSqlDb
 from husfort.qcalendar import CCalendar
 from typedef import CCfgFactorGrp, TUniverse
+from typedef import TFactorClass, TFactors
 from solutions.shared import gen_factors_by_instru_db, gen_factors_avlb_db
 
 
@@ -293,20 +294,20 @@ class CFactorsAvlb(_CFactorsByInstruDbOperator):
             factors_avlb_dir = self.factors_avlb_neu_dir
         else:
             raise ValueError(f"Invalid save_type {save_type}")
-        db_struct_instru = gen_factors_avlb_db(
+        db_struct_fac = gen_factors_avlb_db(
             factors_avlb_dir=factors_avlb_dir,
             factor_class=self.factor_grp.factor_class,
             factors=self.factor_grp.factors,
         )
-        check_and_makedirs(db_struct_instru.db_save_dir)
+        check_and_makedirs(db_struct_fac.db_save_dir)
         sqldb = CMgrSqlDb(
-            db_save_dir=db_struct_instru.db_save_dir,
-            db_name=db_struct_instru.db_name,
-            table=db_struct_instru.table,
+            db_save_dir=db_struct_fac.db_save_dir,
+            db_name=db_struct_fac.db_name,
+            table=db_struct_fac.table,
             mode="a",
         )
         if sqldb.check_continuity(new_data["trade_date"].iloc[0], calendar) == 0:
-            instru_tst_ret_agg_data = new_data[db_struct_instru.table.vars.names]
+            instru_tst_ret_agg_data = new_data[db_struct_fac.table.vars.names]
             sqldb.update(update_data=instru_tst_ret_agg_data)
         return 0
 
@@ -334,3 +335,35 @@ class CFactorsAvlb(_CFactorsByInstruDbOperator):
 
         logger.info(f"All done for factor {SFG(self.factor_grp.factor_class)}")
         return 0
+
+
+class CFactorsLoader:
+    def __init__(self, factor_class: TFactorClass, factors: TFactors, factors_avlb_dir: str):
+        """
+
+        :param factor_class:
+        :param factors:
+        :param factors_avlb_dir:  factors_avlb_raw_dir or factors_avlb_neu_dir
+        """
+        self.factor_class = factor_class
+        self.factors = factors
+        self.factors_avlb_dir = factors_avlb_dir
+
+    @property
+    def value_columns(self) -> list[str]:
+        return ["trade_date", "instrument"] + [f.factor_name for f in self.factors]
+
+    def load(self, bgn_date: str, stp_date: str) -> pd.DataFrame:
+        db_struct_fac = gen_factors_avlb_db(
+            factors_avlb_dir=self.factors_avlb_dir,
+            factor_class=self.factor_class,
+            factors=self.factors,
+        )
+        sqldb = CMgrSqlDb(
+            db_save_dir=db_struct_fac.db_save_dir,
+            db_name=db_struct_fac.db_name,
+            table=db_struct_fac.table,
+            mode="r",
+        )
+        data = sqldb.read_by_range(bgn_date, stp_date, value_columns=self.value_columns)
+        return data
