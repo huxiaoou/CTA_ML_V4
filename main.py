@@ -1,7 +1,9 @@
 import argparse
 
+from typedef import CCfgFactors, TRets
 
-def parse_args():
+
+def parse_args(cfg_facs: CCfgFactors, rets: TRets):
     arg_parser = argparse.ArgumentParser(description="To calculate data, such as macro and forex")
     arg_parser.add_argument("--bgn", type=str, help="begin date, format = [YYYYMMDD]", required=True)
     arg_parser.add_argument("--stp", type=str, help="stop  date, format = [YYYYMMDD]")
@@ -32,23 +34,30 @@ def parse_args():
     # switch: factor
     arg_parser_sub = arg_parser_subs.add_parser(name="factor", help="Calculate factor")
     arg_parser_sub.add_argument(
-        "--fclass", type=str, help="factor class to run", required=True,
-        choices=("MTM", "SKEW", "KURT",
-                 "RS", "BASIS", "TS",
-                 "S0BETA", "S1BETA", "CBETA", "IBETA", "PBETA",
-                 "CTP", "CTR", "CVP", "CVR", "CSP", "CSR", "COV",
-                 "NOI", "NDOI", "WNOI", "WNDOI", "SPDWEB",
-                 "SIZE", "HR", "SR", "LIQUIDITY", "VSTD",
-                 "AMP", "EXR", "SMT", "RWTC", "TAILS", "HEADS",
-                 "TOPS", "DOV", "RES", "VOL", "MF", "RV",
-                 "TA",),
+        "--fclass", type=str,
+        help="factor class to run",
+        required=True, choices=cfg_facs.classes,
     )
 
+    # switch: test return
+    arg_parser_sub = arg_parser_subs.add_parser(name="ic_test", help="Calculate ic_tests")
+    arg_parser_sub.add_argument(
+        "--fclass", type=str,
+        help="factor class to test",
+        required=True, choices=cfg_factors.classes,
+    )
+    arg_parser_sub.add_argument(
+        "--ret", type=str,
+        help="return to test",
+        required=True, choices=[r.ret_name for r in rets],
+    )
     return arg_parser.parse_args()
 
 
 if __name__ == "__main__":
-    from config import proj_cfg, db_struct_cfg
+    import sys
+    from loguru import logger
+    from config import proj_cfg, db_struct_cfg, cfg_factors
     from husfort.qlog import define_logger
     from husfort.qcalendar import CCalendar
     from solutions.shared import get_avlb_db, get_market_db
@@ -56,7 +65,7 @@ if __name__ == "__main__":
     define_logger()
 
     calendar = CCalendar(proj_cfg.calendar_path)
-    args = parse_args()
+    args = parse_args(cfg_facs=cfg_factors, rets=proj_cfg.all_rets)
     bgn_date, stp_date = args.bgn, args.stp or calendar.get_next_date(args.bgn, shift=1)
 
     if args.switch == "available":
@@ -101,65 +110,79 @@ if __name__ == "__main__":
             )
             test_returns_avlb.main(bgn_date, stp_date, calendar)
     elif args.switch == "factor":
-        from config import cfg_factors
+        from solutions.factor import CFactorsAvlb
 
-        fac, fclass = None, args.fclass
-        if fclass == "MTM":
-            if (cfg := cfg_factors.MTM) is not None:
-                from solutions.factorAlg import CFactorMTM
+        cfg = getattr(cfg_factors, args.fclass)
+        if cfg is None:
+            logger.warning(f"No cfg for {args.fclass}")
+            sys.exit(0)
+        if args.fclass == "MTM":
+            from solutions.factorAlg import CFactorMTM
 
-                fac = CFactorMTM(
-                    cfg=cfg,
-                    factors_by_instru_dir=proj_cfg.factors_by_instru_dir,
-                    universe=proj_cfg.universe,
-                    db_struct_preprocess=db_struct_cfg.preprocess,
-                )
-        elif fclass == "SKEW":
-            if (cfg := cfg_factors.SKEW) is not None:
-                from solutions.factorAlg import CFactorSKEW
+            fac = CFactorMTM(
+                cfg=cfg,
+                factors_by_instru_dir=proj_cfg.factors_by_instru_dir,
+                universe=proj_cfg.universe,
+                db_struct_preprocess=db_struct_cfg.preprocess,
+            )
+        elif args.fclass == "SKEW":
+            from solutions.factorAlg import CFactorSKEW
 
-                fac = CFactorSKEW(
-                    cfg=cfg,
-                    factors_by_instru_dir=proj_cfg.factors_by_instru_dir,
-                    universe=proj_cfg.universe,
-                    db_struct_preprocess=db_struct_cfg.preprocess,
-                )
-        elif fclass == "KURT":
-            if (cfg := cfg_factors.KURT) is not None:
-                from solutions.factorAlg import CFactorKURT
+            fac = CFactorSKEW(
+                cfg=cfg,
+                factors_by_instru_dir=proj_cfg.factors_by_instru_dir,
+                universe=proj_cfg.universe,
+                db_struct_preprocess=db_struct_cfg.preprocess,
+            )
+        elif args.fclass == "KURT":
+            from solutions.factorAlg import CFactorKURT
 
-                fac = CFactorKURT(
-                    cfg=cfg,
-                    factors_by_instru_dir=proj_cfg.factors_by_instru_dir,
-                    universe=proj_cfg.universe,
-                    db_struct_preprocess=db_struct_cfg.preprocess,
-                )
-        elif fclass == "RS":
-            if (cfg := cfg_factors.RS) is not None:
-                from solutions.factorAlg import CFactorRS
+            fac = CFactorKURT(
+                cfg=cfg,
+                factors_by_instru_dir=proj_cfg.factors_by_instru_dir,
+                universe=proj_cfg.universe,
+                db_struct_preprocess=db_struct_cfg.preprocess,
+            )
+        elif args.fclass == "RS":
+            from solutions.factorAlg import CFactorRS
 
-                fac = CFactorRS(
-                    cfg=cfg,
-                    factors_by_instru_dir=proj_cfg.factors_by_instru_dir,
-                    universe=proj_cfg.universe,
-                    db_struct_preprocess=db_struct_cfg.preprocess,
-                )
+            fac = CFactorRS(
+                cfg=cfg,
+                factors_by_instru_dir=proj_cfg.factors_by_instru_dir,
+                universe=proj_cfg.universe,
+                db_struct_preprocess=db_struct_cfg.preprocess,
+            )
         else:
             raise NotImplementedError(f"fclass = {args.fclass}")
 
-        if fac is not None:
-            from solutions.factor import CFactorsAvlb
+        fac.main(
+            bgn_date=bgn_date, stp_date=stp_date, calendar=calendar,
+            call_multiprocess=not args.nomp, processes=args.processes,
+        )
+        fac_avlb = CFactorsAvlb(
+            factor_grp=cfg,
+            universe=proj_cfg.universe,
+            factors_by_instru_dir=proj_cfg.factors_by_instru_dir,
+            factors_avlb_raw_dir=proj_cfg.factors_avlb_raw_dir,
+            factors_avlb_neu_dir=proj_cfg.factors_avlb_neu_dir,
+            db_struct_avlb=get_avlb_db(proj_cfg.available_dir),
+        )
+        fac_avlb.main(bgn_date, stp_date, calendar)
+    elif args.switch == "ic_test":
+        from solutions.ic_tests import CICTest
+        from typedef import CRet
 
-            fac.main(
-                bgn_date=bgn_date, stp_date=stp_date, calendar=calendar,
-                call_multiprocess=not args.nomp, processes=args.processes,
-            )
-            fac_avlb = CFactorsAvlb(
-                factor_grp=cfg,
-                universe=proj_cfg.universe,
-                factors_by_instru_dir=proj_cfg.factors_by_instru_dir,
-                factors_avlb_raw_dir=proj_cfg.factors_avlb_raw_dir,
-                factors_avlb_neu_dir=proj_cfg.factors_avlb_neu_dir,
-                db_struct_avlb=get_avlb_db(proj_cfg.available_dir),
-            )
-            fac_avlb.main(bgn_date, stp_date, calendar)
+        factor_grp = getattr(cfg_factors, args.fclass)
+        ret = CRet.parse_from_name(args.ret)
+
+        ic_test = CICTest(
+            factor_grp=factor_grp,
+            factor_type="raw",
+            ret=ret,
+            ret_type="raw",
+            factors_avlb_dir=proj_cfg.factors_avlb_raw_dir,
+            test_returns_avlb_dir=proj_cfg.test_returns_avlb_raw_dir,
+            ic_tests_dir=proj_cfg.ic_tests_dir,
+        )
+        ic_test.main(bgn_date, stp_date, calendar)
+        ic_test.main_summary(bgn_date, stp_date, calendar)

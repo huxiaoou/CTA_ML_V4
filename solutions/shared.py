@@ -1,6 +1,7 @@
 import os
 from husfort.qsqlite import CDbStruct, CSqlTable, CSqlVar
 from typedef import TReturnClass, CRet, TFactorClass, TFactors
+from typing import Literal
 
 
 # ----------------------------------------
@@ -140,6 +141,36 @@ def gen_factors_avlb_db(
         table=CSqlTable(
             name="factor",
             primary_keys=[CSqlVar("trade_date", "TEXT"), CSqlVar("instrument", "TEXT")],
+            value_columns=[CSqlVar(fac.factor_name, "REAL") for fac in factors],
+        )
+    )
+
+
+def gen_ic_tests_db(
+        ic_tests_dir: str,
+        factor_class: TFactorClass,
+        factors: TFactors,
+        factor_type: Literal["raw", "neu"],
+        ret: CRet,
+        ret_type: Literal["raw", "neu"],
+) -> CDbStruct:
+    """
+
+    :param ic_tests_dir:
+    :param factor_class:
+    :param factors:
+    :param factor_type:
+    :param ret:
+    :param ret_type:
+    :return:
+    """
+
+    return CDbStruct(
+        db_save_dir=os.path.join(ic_tests_dir, "data"),
+        db_name=f"{factor_class}-{factor_type}-{ret.ret_name}-{ret_type}.db",
+        table=CSqlTable(
+            name="ic",
+            primary_keys=[CSqlVar("trade_date", "TEXT")],
             value_columns=[CSqlVar(fac.factor_name, "REAL") for fac in factors],
         )
     )

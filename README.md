@@ -42,3 +42,14 @@ make sure the algorithm of each factor is symmetrical about 0
     + F2.db
     + F3.db
     + ...
+
+### ic-tests
+
++ data
+  + F1_RAW_Cls001L1_RAW.db
+  + F1_NEU_Cls001L1_NEU.db
+  + ...
++ plot
+  + F1_RAW_Cls001L1_RAW.pdf
+  + F1_NEU_Cls001L1_NEU.pdf
+  + ...

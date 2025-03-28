@@ -1,7 +1,7 @@
 import os
 from typing import NewType
 from enum import StrEnum
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from itertools import product
 from husfort.qsqlite import CDbStruct
 from husfort.qcalendar import CCalendar
@@ -158,10 +158,14 @@ class CCfgFactorGrpRS(_CCfgFactorGrpWin):
 
 @dataclass(frozen=True)
 class CCfgFactors:
-    MTM: CCfgFactorGrpMTM | None
-    SKEW: CCfgFactorGrpSKEW | None
-    KURT: CCfgFactorGrpKURT | None
-    RS: CCfgFactorGrpRS | None
+    MTM: CCfgFactorGrpMTM | None = None
+    SKEW: CCfgFactorGrpSKEW | None = None
+    KURT: CCfgFactorGrpKURT | None = None
+    RS: CCfgFactorGrpRS | None = None
+
+    @property
+    def classes(self) -> list[str]:
+        return [f.name for f in fields(self)]
 
 
 """
@@ -323,6 +327,10 @@ class CCfgProj:
     def factors_avlb_neu_dir(self):
         return os.path.join(self.project_root_dir, "factors_avlb_neu")
 
+    @property
+    def ic_tests_dir(self):
+        return os.path.join(self.project_root_dir, "ic_tests")
+
 
 if __name__ == "__main__":
     ret = CRet.parse_from_name("Cls010L1")
@@ -342,3 +350,6 @@ if __name__ == "__main__":
     print(f"cfg_factor_grp.factor_names = {cfg_factor_grp.factor_names}")
     print(f"cfg_factor_grp.factors = {cfg_factor_grp.factors}")
     assert cfg_factor_grp.factor_class == "SKEW"
+
+    cfg_factors = CCfgFactors()
+    print(f"factors = {cfg_factors.classes}")
