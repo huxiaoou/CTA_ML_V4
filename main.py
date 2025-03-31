@@ -1,5 +1,4 @@
 import argparse
-
 from typedef import CCfgFactors, TRets
 
 
@@ -51,6 +50,10 @@ def parse_args(cfg_facs: CCfgFactors, rets: TRets):
         help="return to test",
         required=True, choices=[r.ret_name for r in rets],
     )
+    arg_parser_sub.add_argument(
+        "--neu", default=False, action="store_true",
+        help="use this to set fac type and ret as 'neu'",
+    )
     return arg_parser.parse_args()
 
 
@@ -61,6 +64,7 @@ if __name__ == "__main__":
     from husfort.qlog import define_logger
     from husfort.qcalendar import CCalendar
     from solutions.shared import get_avlb_db, get_market_db
+    from typedef import CRet, TFacRetType
 
     define_logger()
 
@@ -170,18 +174,27 @@ if __name__ == "__main__":
         fac_avlb.main(bgn_date, stp_date, calendar)
     elif args.switch == "ic_test":
         from solutions.ic_tests import CICTest
-        from typedef import CRet
 
         factor_grp = getattr(cfg_factors, args.fclass)
         ret = CRet.parse_from_name(args.ret)
+        if args.neu:
+            factor_type = ret_type = TFacRetType.NEU
+            factors_avlb_dir = proj_cfg.factors_avlb_neu_dir
+            test_returns_avlb_dir = proj_cfg.test_returns_avlb_neu_dir
+        else:
+            factor_type = ret_type = TFacRetType.RAW
+            factors_avlb_dir = proj_cfg.factors_avlb_raw_dir
+            test_returns_avlb_dir = proj_cfg.test_returns_avlb_raw_dir
+
+        print(f"factor_type = {factor_type}, ret_type = {ret_type}")
 
         ic_test = CICTest(
             factor_grp=factor_grp,
-            factor_type="raw",
+            factor_type=factor_type,
             ret=ret,
-            ret_type="raw",
-            factors_avlb_dir=proj_cfg.factors_avlb_raw_dir,
-            test_returns_avlb_dir=proj_cfg.test_returns_avlb_raw_dir,
+            ret_type=ret_type,
+            factors_avlb_dir=factors_avlb_dir,
+            test_returns_avlb_dir=test_returns_avlb_dir,
             ic_tests_dir=proj_cfg.ic_tests_dir,
         )
         ic_test.main(bgn_date, stp_date, calendar)

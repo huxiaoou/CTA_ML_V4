@@ -18,6 +18,11 @@ class TReturnClass(StrEnum):
     CLS = "Cls"
 
 
+class TFacRetType(StrEnum):
+    RAW = "raw"
+    NEU = "neu"
+
+
 TReturnName = NewType("TReturnName", str)
 TReturnNames = list[TReturnName]
 

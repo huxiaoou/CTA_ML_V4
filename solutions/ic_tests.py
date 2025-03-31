@@ -1,8 +1,7 @@
 import os
 import pandas as pd
 from loguru import logger
-from typing import Literal
-from typedef import CRet, CCfgFactorGrp
+from typedef import CRet, CCfgFactorGrp, TFacRetType
 from husfort.qutility import check_and_makedirs, SFG
 from husfort.qsqlite import CMgrSqlDb
 from husfort.qcalendar import CCalendar
@@ -16,9 +15,9 @@ class CICTest:
     def __init__(
             self,
             factor_grp: CCfgFactorGrp,
-            factor_type: Literal["raw", "neu"],
+            factor_type: TFacRetType,
             ret: CRet,
-            ret_type: Literal["raw", "neu"],
+            ret_type: TFacRetType,
             factors_avlb_dir: str,
             test_returns_avlb_dir: str,
             ic_tests_dir: str,

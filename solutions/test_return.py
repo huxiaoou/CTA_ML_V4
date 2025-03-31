@@ -1,12 +1,11 @@
 import pandas as pd
 from rich.progress import track
-from typing import Literal
 from loguru import logger
 from husfort.qutility import SFG, check_and_makedirs
 from husfort.qcalendar import CCalendar
 from husfort.qsqlite import CDbStruct, CMgrSqlDb
 from solutions.shared import gen_test_returns_by_instru_db, gen_test_returns_avlb_db
-from typedef import TUniverse, CRet, TReturnClass
+from typedef import TUniverse, CRet, TReturnClass, TFacRetType
 
 
 class CTestReturnsByInstru:
@@ -154,10 +153,10 @@ class CTestReturnsAvlb:
             raise ValueError(f"len of raw data = {len(avlb_raw_data)}  != len of neu data = {avlb_neu_data}.")
         return avlb_neu_data
 
-    def save(self, new_data: pd.DataFrame, calendar: CCalendar, save_type: Literal["raw", "neu"]):
-        if save_type == "raw":
+    def save(self, new_data: pd.DataFrame, calendar: CCalendar, save_type: TFacRetType):
+        if save_type == TFacRetType.RAW:
             test_returns_avlb_dir = self.test_returns_avlb_raw_dir
-        elif save_type == "neu":
+        elif save_type == TFacRetType.NEU:
             test_returns_avlb_dir = self.test_returns_avlb_neu_dir
         else:
             raise ValueError(f"Invalid save_type {save_type}")
@@ -197,12 +196,12 @@ class CTestReturnsAvlb:
         ).sort_values(by=["trade_date", "sectorL1"])
         tst_ret_avlb_raw_data = tst_ret_avlb_data.query(
             f"trade_date >= '{base_bgn_date}' & trade_date <= '{base_stp_date}'")
-        self.save(tst_ret_avlb_raw_data, calendar, save_type="raw")
+        self.save(tst_ret_avlb_raw_data, calendar, save_type=TFacRetType.RAW)
 
         # avlb neu
         logger.info(f"Neutralize available test return ret = {SFG(self.ret.ret_name)}")
         tst_ret_avlb_neu_data = self.neutralize(tst_ret_avlb_raw_data)
-        self.save(tst_ret_avlb_neu_data, calendar, save_type="neu")
+        self.save(tst_ret_avlb_neu_data, calendar, save_type=TFacRetType.NEU)
         return 0
 
 

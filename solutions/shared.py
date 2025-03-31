@@ -1,7 +1,6 @@
 import os
 from husfort.qsqlite import CDbStruct, CSqlTable, CSqlVar
-from typedef import TReturnClass, CRet, TFactorClass, TFactors
-from typing import Literal
+from typedef import TReturnClass, CRet, TFactorClass, TFactors, TFacRetType
 
 
 # ----------------------------------------
@@ -150,9 +149,9 @@ def gen_ic_tests_db(
         ic_tests_dir: str,
         factor_class: TFactorClass,
         factors: TFactors,
-        factor_type: Literal["raw", "neu"],
+        factor_type: TFacRetType,
         ret: CRet,
-        ret_type: Literal["raw", "neu"],
+        ret_type: TFacRetType,
 ) -> CDbStruct:
     """
 
