@@ -201,6 +201,52 @@ Part V: models
 --------------------------------
 """
 
+
+class TModelType(StrEnum):
+    LINEAR = "LINEAR"
+    RIDGE = "RIDGE"
+    LGBM = "LGBM"
+    XGB = "XGB"
+
+
+@dataclass(frozen=True)
+class CTestModel:
+    model_type: TModelType
+    trn_win: int
+    using_instru: bool = False
+    cv: int = 0
+    hyper_param_grids: dict | dict[str, list] = None  # must be provided if cv > 0
+
+    @property
+    def save_id(self) -> str:
+        ui = "UI" if self.using_instru else "NI"
+        return f"{self.model_type}-W{self.trn_win:03d}-CV{self.cv:02d}-{ui}"
+
+    def to_dict(self) -> dict:
+        return {
+            "model_type": self.model_type,
+            "trn_win": self.trn_win,
+            "using_instru": self.using_instru,
+            "cv": self.cv,
+            "hyper_param_grids": self.hyper_param_grids,
+        }
+
+
+@dataclass(frozen=True)
+class CTestData:
+    ret: CRet
+    ret_type: TFacRetType
+    factors: TFactors
+    factor_type: TFacRetType
+    universe: TUniverse
+    factors_avlb_dir: str
+    test_returns_avlb_dir: str
+
+    @property
+    def save_id(self) -> str:
+        return f"factors-{self.factor_type}-{self.ret.ret_name}-{self.ret_type}"
+
+
 """
 --------------------------------
 Part VI: generic and project
@@ -222,11 +268,6 @@ class CCfgMktIdx:
 class CCfgAvlbUnvrs:
     win: int
     amount_threshold: float
-
-
-@dataclass(frozen=True)
-class CCfgTrn:
-    wins: list[int]
 
 
 @dataclass(frozen=True)
@@ -286,10 +327,11 @@ class CCfgProj:
     avlb_unvrs: CCfgAvlbUnvrs
     mkt_idxes: CCfgMktIdx
     const: CCfgConst
-    trn: CCfgTrn
     prd: CCfgPrd
     sim: CCfgSim
     factors: dict
+    test_models: list[CTestModel]
+    factors_universe_options: dict[TReturnClass, list[tuple[TFactorClass, TFactorName]]]
 
     @property
     def test_rets_wins(self) -> list[int]:
@@ -336,6 +378,14 @@ class CCfgProj:
     def ic_tests_dir(self):
         return os.path.join(self.project_root_dir, "ic_tests")
 
+    @property
+    def mclrn_dir(self):
+        return os.path.join(self.project_root_dir, "mclrn")
+
+    @property
+    def mclrn_tests_config_file(self):
+        return "mclrn_tests_config.yaml"
+
 
 if __name__ == "__main__":
     ret = CRet.parse_from_name("Cls010L1")
@@ -358,3 +408,31 @@ if __name__ == "__main__":
 
     cfg_factors = CCfgFactors()
     print(f"factors = {cfg_factors.classes}")
+
+    model_ridge = CTestModel(
+        model_type=TModelType.RIDGE,
+        trn_win=60,
+        cv=5,
+        hyper_param_grids={"alphas": [0.1, 1.0, 10.0]},
+    )
+    print(f"model_ridge = {model_ridge}")
+
+    test_data = CTestData(
+        ret=CRet.parse_from_name("Opn010L1"),
+        ret_type=TFacRetType.RAW,
+        factors=[
+            CFactor(TFactorClass("MTM"), TFactorName("MTM001")),
+            CFactor(TFactorClass("SKEW"), TFactorName("SKEW002")),
+        ],
+        factor_type=TFacRetType.NEU,
+        universe=TUniverse({
+            TInstruName("RB.SHF"): CCfgInstru("C", "BLK"),
+            TInstruName("M.DCE"): CCfgInstru("C", "OIL")
+        }),
+        factors_avlb_dir="",
+        test_returns_avlb_dir="",
+    )
+    print(test_data)
+
+    s = f"{model_ridge.save_id}.{test_data.save_id}"
+    print(s)

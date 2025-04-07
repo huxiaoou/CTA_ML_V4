@@ -1,7 +1,8 @@
 import yaml
 from husfort.qsqlite import CDbStruct, CSqlTable
-from typedef import TUniverse, TInstruName, CCfgInstru, CCfgAvlbUnvrs, CCfgMktIdx, CCfgConst
-from typedef import CCfgTrn, CCfgPrd, CCfgSim
+from typedef import (TUniverse, TInstruName, TReturnClass, TFactorClass, TFactorName,
+                     CCfgInstru, CCfgAvlbUnvrs, CCfgMktIdx, CCfgConst, CTestModel)
+from typedef import CCfgPrd, CCfgSim
 from typedef import CCfgProj, CCfgDbStruct
 from typedef import (CCfgFactors,
                      CCfgFactorGrpMTM, CCfgFactorGrpSKEW, CCfgFactorGrpKURT, CCfgFactorGrpRS)
@@ -12,6 +13,10 @@ with open("config.yaml", "r") as f:
     _config = yaml.safe_load(f)
 
 universe = TUniverse({TInstruName(k): CCfgInstru(**v) for k, v in _config["universe"].items()})
+factors_universe_options = {
+    TReturnClass(k): [(TFactorClass(z[0]), TFactorName(z[1])) for z in v]
+    for k, v in _config["factors_universe_options"].items()
+}
 
 proj_cfg = CCfgProj(
     # --- shared data path
@@ -32,10 +37,11 @@ proj_cfg = CCfgProj(
     avlb_unvrs=CCfgAvlbUnvrs(**_config["available"]),
     mkt_idxes=CCfgMktIdx(**_config["mkt_idxes"]),
     const=CCfgConst(**_config["CONST"]),
-    trn=CCfgTrn(**_config["trn"]),
     prd=CCfgPrd(**_config["prd"]),
     sim=CCfgSim(**_config["sim"]),
     factors=_config["factors"],
+    test_models=[CTestModel(**d) for d in _config["test_models"]],
+    factors_universe_options=factors_universe_options,
 )
 
 # ---------- databases structure ----------
@@ -100,3 +106,10 @@ if __name__ == "__main__":
     print(f"Size of universe = {len(universe)}")
     for instru, sectors in universe.items():
         print(f"{instru:>6s}: {sectors}")
+
+    print(sep)
+    for test_model in proj_cfg.test_models:
+        print(test_model)
+
+    print(sep)
+    print(factors_universe_options)
