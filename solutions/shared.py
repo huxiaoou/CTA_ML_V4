@@ -173,3 +173,27 @@ def gen_ic_tests_db(
             value_columns=[CSqlVar(fac.factor_name, "REAL") for fac in factors],
         )
     )
+
+
+def gen_prdct_db(save_dir: str, save_id: str, ret_name: str) -> CDbStruct:
+    return CDbStruct(
+        db_save_dir=save_dir,
+        db_name=f"{save_id}.db",
+        table=CSqlTable(
+            name="prediction",
+            primary_keys=[CSqlVar("trade_date", "TEXT"), CSqlVar("instrument", "TEXT")],
+            value_columns=[CSqlVar(ret_name, "REAL")],
+        )
+    )
+
+
+def gen_sig_db(save_dir: str, save_id: str) -> CDbStruct:
+    return CDbStruct(
+        db_save_dir=save_dir,
+        db_name=f"{save_id}.db",
+        table=CSqlTable(
+            name="signals",
+            primary_keys=[CSqlVar("trade_date", "TEXT"), CSqlVar("instrument", "TEXT")],
+            value_columns=[CSqlVar("weight", "REAL")],
+        )
+    )

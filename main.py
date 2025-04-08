@@ -62,6 +62,9 @@ def parse_args(cfg_facs: CCfgFactors, rets: TRets):
         help="'parse' configs or 'train and predict'",
         choices=("parse", "trnprd"), required=True,
     )
+
+    # switch: signals
+    arg_parser_subs.add_parser(name="signals", help="Calculate mclrn tests")
     return arg_parser.parse_args()
 
 
@@ -244,3 +247,30 @@ if __name__ == "__main__":
                 processes=args.processes,
                 verbose=args.verbose,
             )
+    elif args.switch == "signals":
+        from solutions.mclrn_parser import load_mclrn_tests, parse_configs_to_mclrn_tests
+        from solutions.signals import main_signals
+
+        config_models = load_mclrn_tests(
+            mclrn_dir=proj_cfg.mclrn_dir,
+            mclrn_tests_config_file=proj_cfg.mclrn_tests_config_file,
+        )
+        tests = parse_configs_to_mclrn_tests(
+            config_models=config_models,
+            factors_universe_options=proj_cfg.factors_universe_options,
+            universe=proj_cfg.universe,
+            factors_avlb_raw_dir=proj_cfg.factors_avlb_raw_dir,
+            factors_avlb_neu_dir=proj_cfg.factors_avlb_neu_dir,
+            test_returns_avlb_raw_dir=proj_cfg.test_returns_avlb_raw_dir,
+            test_returns_avlb_neu_dir=proj_cfg.test_returns_avlb_neu_dir,
+            mclrn_dir=proj_cfg.mclrn_dir,
+        )
+        main_signals(
+            tests=tests,
+            signals_dir=proj_cfg.signals_dir,
+            bgn_date=bgn_date,
+            stp_date=stp_date,
+            calendar=calendar,
+            call_multiprocess=not args.nomp,
+            processes=args.processes,
+        )

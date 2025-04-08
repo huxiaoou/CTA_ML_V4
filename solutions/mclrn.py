@@ -11,9 +11,9 @@ from sklearn.linear_model import LinearRegression, Ridge
 import lightgbm as lgb
 import xgboost as xgb
 from husfort.qcalendar import CCalendar
-from husfort.qsqlite import CMgrSqlDb, CDbStruct, CSqlTable, CSqlVar
+from husfort.qsqlite import CMgrSqlDb
 from husfort.qutility import SFG, SFY, check_and_makedirs, error_handler
-from solutions.shared import gen_factors_avlb_db, gen_test_returns_avlb_db
+from solutions.shared import gen_factors_avlb_db, gen_test_returns_avlb_db, gen_prdct_db
 from typedef import (
     TReturnName, TFactorNames, CFactor,
     CTestData, CTestModel,
@@ -61,17 +61,6 @@ class CTestMclrn:
     @property
     def y_col(self) -> TReturnName:
         return self.test_data.ret.ret_name
-
-    def gen_prdct_db(self) -> CDbStruct:
-        return CDbStruct(
-            db_save_dir=self.mclrn_prd_dir,
-            db_name=f"{self.save_id}.db",
-            table=CSqlTable(
-                name="prediction",
-                primary_keys=[CSqlVar("trade_date", "TEXT"), CSqlVar("instrument", "TEXT")],
-                value_columns=[CSqlVar(self.test_data.ret.ret_name, "REAL")],
-            )
-        )
 
     def reset_estimator(self):
         self.fitted_estimator = None
@@ -281,7 +270,7 @@ class CTestMclrn:
         return sorted_prediction
 
     def process_save_prediction(self, prediction: pd.DataFrame, calendar: CCalendar):
-        db_struct_prdct = self.gen_prdct_db()
+        db_struct_prdct = gen_prdct_db(self.mclrn_prd_dir, self.save_id, self.test_data.ret.ret_name)
         check_and_makedirs(db_struct_prdct.db_save_dir)
         sqldb = CMgrSqlDb(
             db_save_dir=db_struct_prdct.db_save_dir,

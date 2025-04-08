@@ -386,6 +386,10 @@ class CCfgProj:
     def mclrn_tests_config_file(self):
         return "mclrn_tests_config.yaml"
 
+    @property
+    def signals_dir(self):
+        return os.path.join(self.project_root_dir, "signals")
+
 
 if __name__ == "__main__":
     ret = CRet.parse_from_name("Cls010L1")
