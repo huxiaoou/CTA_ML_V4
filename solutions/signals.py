@@ -81,7 +81,8 @@ class CSignalsFromPrdct(CSignals):
 
         def __convert_prd_to_wgt(x: pd.Series) -> pd.Series:
             s = np.sign(x)
-            w = s / np.abs(s).sum()
+            abs_sum = np.abs(s).sum()
+            w = (s / abs_sum) if abs_sum > 0 else 0
             return pd.Series(data=w, index=x.index)
 
         weights = prediction.groupby(by="trade_date")[self.test.test_data.ret.ret_name].apply(__convert_prd_to_wgt)
@@ -101,7 +102,7 @@ class CSignalsFromPrdct(CSignals):
             pivot_data = pd.pivot_table(data=weights, index="trade_date", columns="instrument", values="weight")
             pivot_data_ma = pivot_data.fillna(0).rolling(win).mean()
             abs_sum = pivot_data_ma.abs().sum(axis=1)
-            pivot_data_nm: pd.DataFrame = pivot_data_ma.div(abs_sum, axis=0)
+            pivot_data_nm: pd.DataFrame = pivot_data_ma.div(abs_sum.where(abs_sum > 0, 1), axis=0)
             new_weights = pivot_data_nm.stack().reset_index().rename(columns={0: "weight"})
             res = pd.merge(
                 left=weights[["trade_date", "instrument"]],

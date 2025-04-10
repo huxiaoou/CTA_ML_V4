@@ -64,7 +64,16 @@ def parse_args(cfg_facs: CCfgFactors, rets: TRets):
     )
 
     # switch: signals
-    arg_parser_subs.add_parser(name="signals", help="Calculate mclrn tests")
+    arg_parser_subs.add_parser(name="signals", help="Calculate signals from mclrn tests")
+
+    # switch: simulations
+    arg_parser_subs.add_parser(name="simulations", help="Calculate simulations for signals")
+
+    # switch: evaluations
+    arg_parser_subs.add_parser(name="evaluations", help="Calculate evaluations for simulations")
+
+    # switch: test
+    arg_parser_subs.add_parser(name="test", help="Test some functions")
     return arg_parser.parse_args()
 
 
@@ -274,3 +283,41 @@ if __name__ == "__main__":
             call_multiprocess=not args.nomp,
             processes=args.processes,
         )
+    elif args.switch == "simulations":
+        from solutions.mclrn_parser import load_mclrn_tests, parse_configs_to_mclrn_tests
+        from solutions.simulations import main_sims
+
+        config_models = load_mclrn_tests(
+            mclrn_dir=proj_cfg.mclrn_dir,
+            mclrn_tests_config_file=proj_cfg.mclrn_tests_config_file,
+        )
+        tests = parse_configs_to_mclrn_tests(
+            config_models=config_models,
+            factors_universe_options=proj_cfg.factors_universe_options,
+            universe=proj_cfg.universe,
+            factors_avlb_raw_dir=proj_cfg.factors_avlb_raw_dir,
+            factors_avlb_neu_dir=proj_cfg.factors_avlb_neu_dir,
+            test_returns_avlb_raw_dir=proj_cfg.test_returns_avlb_raw_dir,
+            test_returns_avlb_neu_dir=proj_cfg.test_returns_avlb_neu_dir,
+            mclrn_dir=proj_cfg.mclrn_dir,
+        )
+        main_sims(
+            tests=tests,
+            signals_dir=proj_cfg.signals_dir,
+            init_cash=proj_cfg.const.INIT_CASH,
+            cost_rate=proj_cfg.const.COST_RATE,
+            instru_info_path=proj_cfg.instru_info_path,
+            universe=list(proj_cfg.universe),
+            preprocess=db_struct_cfg.preprocess,
+            fmd=db_struct_cfg.fmd,
+            bgn_date=bgn_date,
+            stp_date=stp_date,
+            calendar=calendar,
+            sim_save_dir=proj_cfg.simulations_dir,
+            call_multiprocess=not args.nomp,
+            processes=args.processes,
+        )
+    elif args.switch == "evaluations":
+        raise NotImplementedError
+    elif args.switch == "test":
+        logger.info("Do some tests")

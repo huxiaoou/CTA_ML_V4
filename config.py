@@ -28,6 +28,7 @@ proj_cfg = CCfgProj(
     by_instru_pos_dir=_config["path"]["by_instru_pos_dir"],
     by_instru_pre_dir=_config["path"]["by_instru_pre_dir"],
     by_instru_min_dir=_config["path"]["by_instru_min_dir"],
+    instru_info_path=_config["path"]["instru_info_path"],
 
     # --- project data root dir
     project_root_dir=_config["path"]["project_root_dir"],

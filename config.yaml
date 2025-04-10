@@ -9,6 +9,7 @@ path:
   by_instru_pos_dir: E:\OneDrive\Data\tushare\by_instrument\position
   by_instru_pre_dir: E:\OneDrive\Data\tushare\by_instrument\preprocess
   by_instru_min_dir: E:\OneDrive\Data\tushare\by_instrument\minute_bar
+  instru_info_path: E:\OneDrive\Data\tushare\instruments.csv
 
   # --- project
   project_root_dir: E:\Data\Projects\CTA_ML_V4
@@ -235,6 +236,7 @@ test_models:
       grow_policy: [ "lossguide" ] # ["depthwise", "lossguide"]
 
 CONST:
-  COST: 0.0003
+  INIT_CASH: 10000000
+  COST_RATE: 0.0003
   SECTORS: [ "AUG", "MTL", "BLK", "OIL", "CHM", "AGR" ]
   LAG: 1

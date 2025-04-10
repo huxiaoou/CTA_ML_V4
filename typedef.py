@@ -282,7 +282,8 @@ class CCfgSim:
 
 @dataclass(frozen=True)
 class CCfgConst:
-    COST: float
+    INIT_CASH: float
+    COST_RATE: float
     SECTORS: list[str]
     LAG: int
 
@@ -318,6 +319,7 @@ class CCfgProj:
     by_instru_pos_dir: str
     by_instru_pre_dir: str
     by_instru_min_dir: str
+    instru_info_path: str
 
     # --- project
     project_root_dir: str
@@ -389,6 +391,14 @@ class CCfgProj:
     @property
     def signals_dir(self):
         return os.path.join(self.project_root_dir, "signals")
+
+    @property
+    def simulations_dir(self):
+        return os.path.join(self.project_root_dir, "simulations")
+
+    @property
+    def evaluations_dir(self):
+        return os.path.join(self.project_root_dir, "evaluations")
 
 
 if __name__ == "__main__":

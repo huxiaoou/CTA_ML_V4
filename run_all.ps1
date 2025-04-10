@@ -17,4 +17,4 @@ python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass RS
 python main.py --nomp --bgn $bgn_date_mclrn --stp $stp_date mclrn --type parse
 python main.py --nomp --bgn $bgn_date_mclrn --stp $stp_date mclrn --type trnprd
 
-python main.py --nomp --bgn $bgn_date --stp $stp_date signals
+python main.py --bgn $bgn_date --stp $stp_date signals
