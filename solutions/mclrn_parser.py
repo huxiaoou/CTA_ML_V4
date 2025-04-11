@@ -119,3 +119,31 @@ def parse_configs_to_mclrn_tests(
         tests.append(test)
     logger.info(f"{SFG(len(tests))} tests are loaded.")
     return tests
+
+
+def gen_tests(
+        mclrn_dir: str,
+        mclrn_tests_config_file: str,
+        factors_universe_options: dict[str, TFactors],
+        universe: TUniverse,
+        factors_avlb_raw_dir: str,
+        factors_avlb_neu_dir: str,
+        test_returns_avlb_raw_dir: str,
+        test_returns_avlb_neu_dir: str,
+
+) -> list[CTestMclrn]:
+    config_models = load_mclrn_tests(
+        mclrn_dir=mclrn_dir,
+        mclrn_tests_config_file=mclrn_tests_config_file,
+    )
+    tests = parse_configs_to_mclrn_tests(
+        config_models=config_models,
+        factors_universe_options=factors_universe_options,
+        universe=universe,
+        factors_avlb_raw_dir=factors_avlb_raw_dir,
+        factors_avlb_neu_dir=factors_avlb_neu_dir,
+        test_returns_avlb_raw_dir=test_returns_avlb_raw_dir,
+        test_returns_avlb_neu_dir=test_returns_avlb_neu_dir,
+        mclrn_dir=mclrn_dir,
+    )
+    return tests

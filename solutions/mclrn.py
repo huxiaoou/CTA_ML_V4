@@ -12,7 +12,7 @@ import lightgbm as lgb
 import xgboost as xgb
 from husfort.qcalendar import CCalendar
 from husfort.qsqlite import CMgrSqlDb
-from husfort.qutility import SFG, SFY, check_and_makedirs, error_handler
+from husfort.qutility import SFG, SFY, check_and_makedirs, error_handler, qtimer
 from solutions.shared import gen_factors_avlb_db, gen_test_returns_avlb_db, gen_prdct_db
 from typedef import (
     TReturnName, TFactorNames, CFactor,
@@ -362,6 +362,7 @@ class CTestMclrnXGB(CTestMclrn):
         print(text)
 
 
+@qtimer
 def main_train_and_predict(
         tests: list[CTestMclrn],
         bgn_date: str,

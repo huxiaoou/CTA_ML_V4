@@ -1,11 +1,12 @@
 import multiprocessing as mp
+from loguru import logger
 from rich.progress import track, Progress
 from husfort.qcalendar import CCalendar
 from husfort.qinstruments import CInstruMgr
 from husfort.qsimulation import CMgrMktData, CMgrMajContract, CSignal, CSimulation
 from husfort.qsimulation import TExePriceType
 from husfort.qsqlite import CDbStruct
-from husfort.qutility import error_handler
+from husfort.qutility import error_handler, qtimer
 from solutions.mclrn import CTestMclrn
 from solutions.signals import gen_sig_db
 from typedef import TReturnClass
@@ -50,6 +51,7 @@ def process_for_sim(
     return 0
 
 
+@qtimer
 def main_sims(
         tests: list[CTestMclrn],
         signals_dir: str,
@@ -72,6 +74,7 @@ def main_sims(
     mgr_mkt_data = CMgrMktData(fmd)
     desc = "Do simulations for signals"
     if call_multiprocess:
+        logger.info("For simulation, multiprocess is not necessarily faster than uni-process")
         with Progress() as pb:
             main_task = pb.add_task(description=desc, total=len(tests))
             with mp.get_context("spawn").Pool(processes=processes) as pool:
