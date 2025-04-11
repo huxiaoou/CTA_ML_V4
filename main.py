@@ -282,6 +282,12 @@ if __name__ == "__main__":
                 processes=args.processes,
             )
         elif args.switch == "evaluations":
-            raise NotImplementedError
+            from solutions.evaluations import main_evl_tests
+
+            main_evl_tests(
+                tests=tests,
+                sim_save_dir=proj_cfg.simulations_dir,
+                evl_save_dir=proj_cfg.evaluations_dir,
+            )
     elif args.switch == "test":
         logger.info("Do some tests")
