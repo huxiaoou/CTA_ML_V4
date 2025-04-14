@@ -67,6 +67,9 @@ def parse_args(cfg_facs: CCfgFactors, rets: TRets):
     # switch: evaluations
     arg_parser_subs.add_parser(name="evaluations", help="Calculate evaluations for simulations")
 
+    # switch: evaluations
+    arg_parser_subs.add_parser(name="quick", help="Calculate quick simulations for signals")
+
     # switch: test
     arg_parser_subs.add_parser(name="test", help="Test some functions")
     return arg_parser.parse_args()
@@ -214,7 +217,7 @@ if __name__ == "__main__":
         )
         ic_test.main(bgn_date, stp_date, calendar)
         ic_test.main_summary(bgn_date, stp_date, calendar)
-    elif args.switch in ("mclrn", "signals", "simulations", "evaluations"):
+    elif args.switch in ("mclrn", "signals", "simulations", "evaluations", "quick"):
         from solutions.mclrn_parser import gen_tests
 
         if args.switch == "mclrn":
@@ -288,6 +291,21 @@ if __name__ == "__main__":
                 tests=tests,
                 sim_save_dir=proj_cfg.simulations_dir,
                 evl_save_dir=proj_cfg.evaluations_dir,
+            )
+        elif args.switch == "quick":
+            from solutions.sims_quick import main_sims_quick
+
+            main_sims_quick(
+                tests=tests,
+                signals_dir=proj_cfg.signals_dir,
+                test_returns_avlb_raw_dir=proj_cfg.test_returns_avlb_raw_dir,
+                cost_rate=proj_cfg.const.COST_RATE,
+                sims_quick_dir=proj_cfg.sims_quick_dir,
+                bgn_date=bgn_date,
+                stp_date=stp_date,
+                calendar=calendar,
+                call_multiprocess=not args.nomp,
+                processes=args.processes,
             )
     elif args.switch == "test":
         logger.info("Do some tests")

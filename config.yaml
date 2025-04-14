@@ -236,7 +236,7 @@ test_models:
       grow_policy: [ "lossguide" ] # ["depthwise", "lossguide"]
 
 CONST:
-  INIT_CASH: 10000000
+  INIT_CASH: 100_000_000
   COST_RATE: 0.0003
   SECTORS: [ "AUG", "MTL", "BLK", "OIL", "CHM", "AGR" ]
   LAG: 1

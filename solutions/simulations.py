@@ -76,7 +76,7 @@ def main_sims(
     if call_multiprocess:
         logger.info("For simulation, multiprocess is not necessarily faster than uni-process")
         with Progress() as pb:
-            main_task = pb.add_task(description=desc, total=len(tests))
+            main_task = pb.add_task(description=desc, total=len(sims))
             with mp.get_context("spawn").Pool(processes=processes) as pool:
                 for signal, exe_price_type in sims:
                     pool.apply_async(

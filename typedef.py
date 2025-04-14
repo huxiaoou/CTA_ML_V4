@@ -400,6 +400,10 @@ class CCfgProj:
     def evaluations_dir(self):
         return os.path.join(self.project_root_dir, "evaluations")
 
+    @property
+    def sims_quick_dir(self):
+        return os.path.join(self.project_root_dir, "sims_quick")
+
 
 if __name__ == "__main__":
     ret = CRet.parse_from_name("Cls010L1")
