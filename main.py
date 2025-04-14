@@ -283,6 +283,7 @@ if __name__ == "__main__":
                 sim_save_dir=proj_cfg.simulations_dir,
                 call_multiprocess=not args.nomp,
                 processes=args.processes,
+                verbose=args.verbose,
             )
         elif args.switch == "evaluations":
             from solutions.evaluations import main_evl_tests

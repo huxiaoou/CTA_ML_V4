@@ -36,6 +36,7 @@ def process_for_sim(
         stp_date: str,
         calendar: CCalendar,
         sim_save_dir: str,
+        verbose: bool,
 ):
     sim = CSimulation(
         signal=signal,
@@ -47,7 +48,7 @@ def process_for_sim(
         mgr_mkt_data=mgr_mkt_data,
         sim_save_dir=sim_save_dir,
     )
-    sim.main(bgn_date=bgn_date, stp_date=stp_date, calendar=calendar)
+    sim.main(bgn_date=bgn_date, stp_date=stp_date, calendar=calendar, verbose=verbose)
     return 0
 
 
@@ -67,6 +68,7 @@ def main_sims(
         sim_save_dir: str,
         call_multiprocess: bool,
         processes: int,
+        verbose: bool,
 ):
     sims = covert_tests_to_sims(tests, signals_dir)
     mgr_instru = CInstruMgr(instru_info_path, key="tushareId")
@@ -93,6 +95,7 @@ def main_sims(
                             "stp_date": stp_date,
                             "calendar": calendar,
                             "sim_save_dir": sim_save_dir,
+                            "verbose": verbose,
                         },
                         callback=lambda _: pb.update(task_id=main_task, advance=1),
                         error_callback=error_handler,
@@ -113,5 +116,6 @@ def main_sims(
                 stp_date=stp_date,
                 calendar=calendar,
                 sim_save_dir=sim_save_dir,
+                verbose=verbose,
             )
     return 0
