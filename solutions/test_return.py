@@ -4,6 +4,7 @@ from loguru import logger
 from husfort.qutility import SFG, check_and_makedirs
 from husfort.qcalendar import CCalendar
 from husfort.qsqlite import CDbStruct, CMgrSqlDb
+from husfort.qsimquick import CTestReturnLoaderBase
 from solutions.shared import gen_test_returns_by_instru_db, gen_test_returns_avlb_db
 from typedef import TUniverse, CRet, TReturnClass, TFacRetType
 
@@ -205,8 +206,8 @@ class CTestReturnsAvlb:
         return 0
 
 
-class CTestReturnLoader:
-    def __init__(self, ret: CRet, test_returns_avlb_dir):
+class CTestReturnLoader(CTestReturnLoaderBase):
+    def __init__(self, ret: CRet, test_returns_avlb_dir: str):
         """
 
         :param ret:
@@ -214,6 +215,14 @@ class CTestReturnLoader:
         """
         self.ret = ret
         self.test_returns_avlb_dir = test_returns_avlb_dir
+
+    @property
+    def shift(self) -> int:
+        return self.ret.shift
+
+    @property
+    def ret_name(self) -> str:
+        return self.ret.ret_name
 
     @property
     def value_columns(self) -> list[str]:

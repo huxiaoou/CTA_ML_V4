@@ -197,21 +197,3 @@ def gen_sig_db(save_dir: str, save_id: str) -> CDbStruct:
             value_columns=[CSqlVar("weight", "REAL")],
         )
     )
-
-
-def gen_sims_quick_nav_db(save_dir: str, save_id: str) -> CDbStruct:
-    return CDbStruct(
-        db_save_dir=save_dir,
-        db_name=f"{save_id}.db",
-        table=CSqlTable(
-            name="nav",
-            primary_keys=[CSqlVar("trade_date", "TEXT")],
-            value_columns=[
-                CSqlVar("raw_ret", "REAL"),
-                CSqlVar("delta_weights_sum", "REAL"),
-                CSqlVar("cost", "REAL"),
-                CSqlVar("ret", "REAL"),
-                CSqlVar("nav", "REAL"),
-            ],
-        )
-    )

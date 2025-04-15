@@ -5,15 +5,20 @@ from rich.progress import track
 from husfort.qsqlite import CMgrSqlDb
 from husfort.qcalendar import CCalendar
 from husfort.qutility import error_handler, check_and_makedirs
+from husfort.qsimquick import CSignalsLoaderBase
 from rich.progress import Progress
 from solutions.shared import gen_prdct_db, gen_sig_db
 from solutions.mclrn import CTestMclrn
 
 
-class CSignalsLoader:
+class CSignalsLoader(CSignalsLoaderBase):
     def __init__(self, signals_dir: str, signal_id: str):
         self.signals_dir = signals_dir
-        self.signal_id = signal_id
+        self._signal_id = signal_id
+
+    @property
+    def signal_id(self):
+        return self._signal_id
 
     def load(self, bgn_date: str, stp_date: str) -> pd.DataFrame:
         db_struct = gen_sig_db(save_dir=self.signals_dir, save_id=self.signal_id)
