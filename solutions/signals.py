@@ -10,7 +10,7 @@ from solutions.shared import gen_prdct_db, gen_sig_db
 from solutions.mclrn import CTestMclrn
 
 
-class CSignals:
+class CSignalsLoader:
     def __init__(self, signals_dir: str, signal_id: str):
         self.signals_dir = signals_dir
         self.signal_id = signal_id
@@ -46,7 +46,7 @@ class CSignals:
         return 0
 
 
-class CSignalsFromPrdct(CSignals):
+class CSignalsFromPrdct(CSignalsLoader):
     def __init__(self, signals_dir: str, test: CTestMclrn):
         super().__init__(signals_dir, test.save_id)
         self.test = test

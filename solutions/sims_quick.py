@@ -1,4 +1,3 @@
-import os
 import pandas as pd
 import multiprocessing as mp
 from rich.progress import track, Progress
@@ -10,35 +9,37 @@ from typedef import CRet, TReturnClass
 from solutions.shared import gen_sims_quick_nav_db
 from solutions.test_return import CTestReturnLoader
 from solutions.mclrn import CTestMclrn
-from solutions.signals import CSignals
+from solutions.signals import CSignalsLoader
+
+TSimQuickArgs = tuple[CSignalsLoader, CTestReturnLoader]
 
 
-def covert_tests_to_sims_quick(
+def covert_tests_to_sims_quick_args(
         tests: list[CTestMclrn],
         signals_dir: str,
         test_returns_avlb_raw_dir: str,
-) -> list[tuple[CSignals, CTestReturnLoader]]:
-    sims: list[tuple[CSignals, CTestReturnLoader]] = []
+) -> list[TSimQuickArgs]:
+    sim_quick_args: list[TSimQuickArgs] = []
     for test in tests:
-        signal = CSignals(signals_dir=signals_dir, signal_id=test.save_id)
+        signal = CSignalsLoader(signals_dir=signals_dir, signal_id=test.save_id)
         if test.test_data.ret.ret_class == TReturnClass.OPN:
             ret = CRet.parse_from_name("Opn001L1")
         else:
             ret = CRet.parse_from_name("Cls001L1")
         test_return_loader = CTestReturnLoader(ret, test_returns_avlb_raw_dir)
-        sims.append((signal, test_return_loader))
-    return sims
+        sim_quick_args.append((signal, test_return_loader))
+    return sim_quick_args
 
 
 class CSimQuick:
     def __init__(
             self,
-            signals: CSignals,
+            signals_loader: CSignalsLoader,
             test_return_loader: CTestReturnLoader,
             cost_rate: float,
             sims_quick_dir: str,
     ):
-        self.signals = signals
+        self.signals_loader = signals_loader
         self.test_return_loader = test_return_loader
         self.cost_rate = cost_rate
         self.quick_sim_save_dir = sims_quick_dir
@@ -52,7 +53,7 @@ class CSimQuick:
         return sig_dates, exe_dates
 
     def get_sigs_and_rets(self, base_bgn_date: str, base_stp_date: str) -> pd.DataFrame:
-        sigs = self.signals.load(base_bgn_date, base_stp_date)
+        sigs = self.signals_loader.load(base_bgn_date, base_stp_date)
         rets = self.test_return_loader.load(base_bgn_date, base_stp_date)
         data = pd.merge(left=sigs, right=rets, how="right", on=["trade_date", "instrument"]).fillna(0)
         return data
@@ -85,7 +86,7 @@ class CSimQuick:
         return 0
 
     def load_nav_at_date(self, trade_date: str) -> float:
-        db_struct = gen_sims_quick_nav_db(save_dir=self.quick_sim_save_dir, save_id=self.signals.signal_id)
+        db_struct = gen_sims_quick_nav_db(save_dir=self.quick_sim_save_dir, save_id=self.signals_loader.signal_id)
         sqldb = CMgrSqlDb(
             db_save_dir=self.quick_sim_save_dir,
             db_name=db_struct.db_name,
@@ -103,7 +104,7 @@ class CSimQuick:
         return last_nav
 
     def load_nav_range(self, bgn_date: str, stp_date: str) -> pd.DataFrame:
-        db_struct = gen_sims_quick_nav_db(save_dir=self.quick_sim_save_dir, save_id=self.signals.signal_id)
+        db_struct = gen_sims_quick_nav_db(save_dir=self.quick_sim_save_dir, save_id=self.signals_loader.signal_id)
         sqldb = CMgrSqlDb(
             db_save_dir=self.quick_sim_save_dir,
             db_name=db_struct.db_name,
@@ -117,7 +118,7 @@ class CSimQuick:
         return nav_data.set_index("trade_date")
 
     def save_nav(self, net_result: pd.DataFrame, calendar: CCalendar):
-        db_struct = gen_sims_quick_nav_db(save_dir=self.quick_sim_save_dir, save_id=self.signals.signal_id)
+        db_struct = gen_sims_quick_nav_db(save_dir=self.quick_sim_save_dir, save_id=self.signals_loader.signal_id)
         sqldb = CMgrSqlDb(
             db_save_dir=self.quick_sim_save_dir,
             db_name=db_struct.db_name,
@@ -131,7 +132,7 @@ class CSimQuick:
     def plot(self, nav_data: pd.DataFrame):
         artist = CPlotLines(
             plot_data=nav_data,
-            fig_name=f"{self.signals.signal_id}",
+            fig_name=f"{self.signals_loader.signal_id}",
             fig_save_dir=self.quick_sim_save_dir,
         )
         artist.plot()
@@ -169,14 +170,14 @@ def main_sims_quick(
         processes: int,
 ):
     check_and_makedirs(sims_quick_dir)
-    sim_args = covert_tests_to_sims_quick(tests, signals_dir, test_returns_avlb_raw_dir)
+    sim_quick_args = covert_tests_to_sims_quick_args(tests, signals_dir, test_returns_avlb_raw_dir)
     desc = "Do quick simulations"
     if call_multiprocess:
         with Progress() as pb:
-            main_task = pb.add_task(description=desc, total=len(sim_args))
+            main_task = pb.add_task(description=desc, total=len(sim_quick_args))
             with mp.get_context("spawn").Pool(processes=processes) as pool:
-                for signals, test_return_loader in sim_args:
-                    sim_quick = CSimQuick(signals, test_return_loader, cost_rate, sims_quick_dir)
+                for signals_loader, test_return_loader in sim_quick_args:
+                    sim_quick = CSimQuick(signals_loader, test_return_loader, cost_rate, sims_quick_dir)
                     pool.apply_async(
                         sim_quick.main,
                         kwds={
@@ -190,8 +191,7 @@ def main_sims_quick(
                 pool.close()
                 pool.join()
     else:
-        for signals, test_return_loader in track(sim_args, description=desc):
-            # for signals, test_return_loader in sim_args:
-            sim_quick = CSimQuick(signals, test_return_loader, cost_rate, sims_quick_dir)
+        for signals_loader, test_return_loader in track(sim_quick_args, description=desc):
+            sim_quick = CSimQuick(signals_loader, test_return_loader, cost_rate, sims_quick_dir)
             sim_quick.main(bgn_date, stp_date, calendar)
     return 0

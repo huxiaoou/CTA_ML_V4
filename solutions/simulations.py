@@ -11,17 +11,19 @@ from solutions.mclrn import CTestMclrn
 from solutions.signals import gen_sig_db
 from typedef import TReturnClass
 
+TSimArgs = tuple[CSignal, TExePriceType]
 
-def covert_tests_to_sims(tests: list[CTestMclrn], signals_dir: str) -> list[tuple[CSignal, TExePriceType]]:
-    sims: list[tuple[CSignal, TExePriceType]] = []
+
+def covert_tests_to_sim_args(tests: list[CTestMclrn], signals_dir: str) -> list[TSimArgs]:
+    sim_args: list[TSimArgs] = []
     for test in tests:
         signal_db_struct = gen_sig_db(save_dir=signals_dir, save_id=test.save_id)
         signal = CSignal(sid=test.save_id, signal_db_struct=signal_db_struct)
         if test.test_data.ret.ret_class == TReturnClass.OPN:
-            sims.append((signal, TExePriceType.OPEN))
+            sim_args.append((signal, TExePriceType.OPEN))
         else:
-            sims.append((signal, TExePriceType.CLOSE))
-    return sims
+            sim_args.append((signal, TExePriceType.CLOSE))
+    return sim_args
 
 
 def process_for_sim(
@@ -70,7 +72,7 @@ def main_sims(
         processes: int,
         verbose: bool,
 ):
-    sims = covert_tests_to_sims(tests, signals_dir)
+    sim_args = covert_tests_to_sim_args(tests, signals_dir)
     mgr_instru = CInstruMgr(instru_info_path, key="tushareId")
     mgr_maj_contract = CMgrMajContract(universe, preprocess)
     mgr_mkt_data = CMgrMktData(fmd)
@@ -78,9 +80,9 @@ def main_sims(
     if call_multiprocess:
         logger.info("For simulation, multiprocess is not necessarily faster than uni-process")
         with Progress() as pb:
-            main_task = pb.add_task(description=desc, total=len(sims))
+            main_task = pb.add_task(description=desc, total=len(sim_args))
             with mp.get_context("spawn").Pool(processes=processes) as pool:
-                for signal, exe_price_type in sims:
+                for signal, exe_price_type in sim_args:
                     pool.apply_async(
                         process_for_sim,
                         kwds={
@@ -103,7 +105,7 @@ def main_sims(
                 pool.close()
                 pool.join()
     else:
-        for signal, exe_price_type in track(sims, description=desc):
+        for signal, exe_price_type in track(sim_args, description=desc):
             process_for_sim(
                 signal=signal,
                 init_cash=init_cash,
