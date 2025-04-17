@@ -1,8 +1,8 @@
 import argparse
-from typedef import CCfgFactors, TRets
+from typedef import CCfgFactors
 
 
-def parse_args(cfg_facs: CCfgFactors, rets: TRets):
+def parse_args(cfg_facs: CCfgFactors):
     arg_parser = argparse.ArgumentParser(description="To calculate data, such as macro and forex")
     arg_parser.add_argument("--bgn", type=str, help="begin date, format = [YYYYMMDD]", required=True)
     arg_parser.add_argument("--stp", type=str, help="stop  date, format = [YYYYMMDD]")
@@ -39,20 +39,11 @@ def parse_args(cfg_facs: CCfgFactors, rets: TRets):
     )
 
     # switch: test return
-    arg_parser_sub = arg_parser_subs.add_parser(name="ic_test", help="Calculate ic_tests")
+    arg_parser_sub = arg_parser_subs.add_parser(name="ic", help="Calculate ic_tests")
     arg_parser_sub.add_argument(
         "--fclass", type=str,
         help="factor class to test",
-        required=True, choices=cfg_factors.classes,
-    )
-    arg_parser_sub.add_argument(
-        "--ret", type=str,
-        help="return to test",
-        required=True, choices=[r.ret_name for r in rets],
-    )
-    arg_parser_sub.add_argument(
-        "--neu", default=False, action="store_true",
-        help="use this to set fac type and ret as 'neu'",
+        required=True, choices=cfg_facs.classes,
     )
 
     # switch: mclrn
@@ -81,13 +72,13 @@ if __name__ == "__main__":
     from config import proj_cfg, db_struct_cfg, cfg_factors
     from husfort.qlog import define_logger
     from husfort.qcalendar import CCalendar
+    from typedef import CCfgFactorGrp, TFacRetType
     from solutions.shared import get_avlb_db, get_market_db
-    from typedef import CRet, TFacRetType
 
     define_logger()
 
     calendar = CCalendar(proj_cfg.calendar_path)
-    args = parse_args(cfg_facs=cfg_factors, rets=proj_cfg.all_rets)
+    args = parse_args(cfg_facs=cfg_factors)
     bgn_date, stp_date = args.bgn, args.stp or calendar.get_next_date(args.bgn, shift=1)
 
     if args.switch == "available":
@@ -190,33 +181,25 @@ if __name__ == "__main__":
             db_struct_avlb=get_avlb_db(proj_cfg.available_dir),
         )
         fac_avlb.main(bgn_date, stp_date, calendar)
-    elif args.switch == "ic_test":
-        from solutions.ic_tests import CICTest
+    elif args.switch == "ic":
+        from solutions.ic_tests import main_ic_tests, TICTestAuxArgs
 
-        factor_grp = getattr(cfg_factors, args.fclass)
-        ret = CRet.parse_from_name(args.ret)
-        if args.neu:
-            factor_type = ret_type = TFacRetType.NEU
-            factors_avlb_dir = proj_cfg.factors_avlb_neu_dir
-            test_returns_avlb_dir = proj_cfg.test_returns_avlb_neu_dir
-        else:
-            factor_type = ret_type = TFacRetType.RAW
-            factors_avlb_dir = proj_cfg.factors_avlb_raw_dir
-            test_returns_avlb_dir = proj_cfg.test_returns_avlb_raw_dir
+        factor_grp: CCfgFactorGrp = getattr(cfg_factors, args.fclass)
+        aux_args_list: list[TICTestAuxArgs] = list(zip(
+            [TFacRetType.RAW, TFacRetType.NEU],
+            [proj_cfg.factors_avlb_raw_dir, proj_cfg.factors_avlb_neu_dir],
+            [proj_cfg.test_returns_avlb_raw_dir, proj_cfg.test_returns_avlb_neu_dir],
+        ))
 
-        print(f"factor_type = {factor_type}, ret_type = {ret_type}")
-
-        ic_test = CICTest(
+        main_ic_tests(
+            rets=proj_cfg.all_rets,
             factor_grp=factor_grp,
-            factor_type=factor_type,
-            ret=ret,
-            ret_type=ret_type,
-            factors_avlb_dir=factors_avlb_dir,
-            test_returns_avlb_dir=test_returns_avlb_dir,
+            aux_args_list=aux_args_list,
             ic_tests_dir=proj_cfg.ic_tests_dir,
+            bgn_date=bgn_date,
+            stp_date=stp_date,
+            calendar=calendar,
         )
-        ic_test.main(bgn_date, stp_date, calendar)
-        ic_test.main_summary(bgn_date, stp_date, calendar)
     elif args.switch in ("mclrn", "signals", "simulations", "evaluations", "quick"):
         from solutions.mclrn_parser import gen_tests
 

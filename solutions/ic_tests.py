@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 from loguru import logger
-from typedef import CRet, CCfgFactorGrp, TFacRetType
+from typedef import CRet, CCfgFactorGrp, TFacRetType, TRets
 from husfort.qutility import check_and_makedirs, SFG
 from husfort.qsqlite import CMgrSqlDb
 from husfort.qcalendar import CCalendar
@@ -55,6 +55,13 @@ class CICTest:
         return s
 
     def save(self, new_data: pd.DataFrame, calendar: CCalendar):
+        """
+
+        :param new_data: a pd.DataFrame with columns =
+                        ["trade_date"] + self.factor_grp.factor_names
+        :param calendar:
+        :return:
+        """
         ic_test_db_struct = gen_ic_tests_db(
             ic_tests_dir=self.ic_tests_dir,
             factor_class=self.factor_grp.factor_class,
@@ -92,7 +99,7 @@ class CICTest:
             mode="a",
         )
         data = sqldb.read_by_range(
-            bgn_date, stp_date,
+            bgn_date=bgn_date, stp_date=stp_date,
             value_columns=["trade_date"] + self.factor_grp.factor_names,
         )
         return data
@@ -131,11 +138,10 @@ class CICTest:
         return 0
 
     def main(self, bgn_date: str, stp_date: str, calendar: CCalendar):
-        iter_dates = calendar.get_iter_list(bgn_date, stp_date)
-        base_bgn_date = calendar.get_next_date(iter_dates[0], -self.ret.shift)
-        base_end_date = calendar.get_next_date(iter_dates[-1], -self.ret.shift)
-        base_stp_date = calendar.get_next_date(base_end_date, shift=1)
-
+        buffer_bgn_date = calendar.get_next_date(bgn_date, -self.ret.shift)
+        iter_dates = calendar.get_iter_list(buffer_bgn_date, stp_date)
+        save_dates = iter_dates[self.ret.shift:]
+        base_bgn_date, base_stp_date = iter_dates[0], iter_dates[-self.ret.shift]
         returns_data = self.load_returns(base_bgn_date, base_stp_date)
         factors_data = self.load_factors(base_bgn_date, base_stp_date)
         input_data = pd.merge(
@@ -147,18 +153,47 @@ class CICTest:
         lr, lf, li = len(returns_data), len(factors_data), len(input_data)
         if (li != lr) or (li != lf):
             raise ValueError(f"len of factor data = {lf}, len of return data = {lr}, len of input data = {li}.")
-        ic_data = input_data.groupby(by="trade_date").apply(self.corr).reset_index()
-        self.save(ic_data, calendar)
+        ic_data = input_data.groupby(by="trade_date").apply(self.corr)
+        ic_data["trade_date"] = save_dates
+        new_data = ic_data[["trade_date"] + self.factor_grp.factor_names]
+        new_data = new_data.reset_index(drop=True)
+        self.save(new_data, calendar)
         logger.info(f"IC test for {SFG(self.save_id)} finished.")
         return 0
 
-    def main_summary(self, summary_bgn_date: str, summary_stp_date: str, calendar: CCalendar):
-        iter_dates = calendar.get_iter_list(summary_bgn_date, summary_stp_date)
-        base_bgn_date = calendar.get_next_date(iter_dates[0], -self.ret.shift)
-        base_end_date = calendar.get_next_date(iter_dates[-1], -self.ret.shift)
-        base_stp_date = calendar.get_next_date(base_end_date, shift=1)
-        ic_data = self.load(base_bgn_date, base_stp_date).set_index("trade_date")
+    def main_summary(self, bgn_date: str, stp_date: str):
+        ic_data = self.load(bgn_date, stp_date).set_index("trade_date")
         ic_cumsum = ic_data.cumsum()
         self.plot(ic_cumsum)
         self.report(ic_data)
         return 0
+
+
+TFactorsAvlbDirType = str
+TTestReturnsAvlbDirType = str
+TICTestAuxArgs = tuple[TFacRetType, TFactorsAvlbDirType, TTestReturnsAvlbDirType]
+
+
+def main_ic_tests(
+        rets: TRets,
+        factor_grp: CCfgFactorGrp,
+        aux_args_list: list[TICTestAuxArgs],
+        ic_tests_dir: str,
+        bgn_date: str,
+        stp_date: str,
+        calendar: CCalendar,
+):
+    for ret in rets:
+        for fac_ret_type, factors_avlb_dir, test_returns_avlb_dir in aux_args_list:
+            ic_test = CICTest(
+                factor_grp=factor_grp,
+                factor_type=fac_ret_type,
+                ret=ret,
+                ret_type=fac_ret_type,
+                factors_avlb_dir=factors_avlb_dir,
+                test_returns_avlb_dir=test_returns_avlb_dir,
+                ic_tests_dir=ic_tests_dir,
+            )
+            ic_test.main(bgn_date, stp_date, calendar)
+            ic_test.main_summary(bgn_date, stp_date)
+    return 0

@@ -15,6 +15,11 @@ python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass SKEW
 python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass KURT
 python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass RS
 
+python main.py --bgn $bgn_date_factor --stp $stp_date ic --fclass MTM
+python main.py --bgn $bgn_date_factor --stp $stp_date ic --fclass SKEW
+python main.py --bgn $bgn_date_factor --stp $stp_date ic --fclass KURT
+python main.py --bgn $bgn_date_factor --stp $stp_date ic --fclass RS
+
 python main.py --bgn $bgn_date_mclrn --stp $stp_date mclrn
 python main.py --bgn $bgn_date_sig --stp $stp_date signals
 
