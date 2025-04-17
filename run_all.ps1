@@ -5,7 +5,7 @@ $bgn_date_factor = "20140102"
 $bgn_date_mclrn = "20150105"
 $bgn_date_sig = "20151230" # must at least 2 days ahead of bgn date
 $bgn_date = "20160104"
-$stp_date = "20250301"
+$stp_date = "20250401"
 
 python main.py --bgn $bgn_date_avlb --stp $stp_date available
 python main.py --bgn $bgn_date_avlb --stp $stp_date market
@@ -15,10 +15,10 @@ python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass SKEW
 python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass KURT
 python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass RS
 
-python main.py --bgn $bgn_date_factor --stp $stp_date ic --fclass MTM
-python main.py --bgn $bgn_date_factor --stp $stp_date ic --fclass SKEW
-python main.py --bgn $bgn_date_factor --stp $stp_date ic --fclass KURT
-python main.py --bgn $bgn_date_factor --stp $stp_date ic --fclass RS
+python main.py --bgn $bgn_date --stp $stp_date ic --fclass MTM
+python main.py --bgn $bgn_date --stp $stp_date ic --fclass SKEW
+python main.py --bgn $bgn_date --stp $stp_date ic --fclass KURT
+python main.py --bgn $bgn_date --stp $stp_date ic --fclass RS
 
 python main.py --bgn $bgn_date_mclrn --stp $stp_date mclrn
 python main.py --bgn $bgn_date_sig --stp $stp_date signals
