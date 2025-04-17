@@ -243,7 +243,22 @@ class CFactorsAvlb(_CFactorsByInstruDbOperator):
         avlb_data = avlb_data[["trade_date", "instrument", "sectorL1"]]
         return avlb_data
 
-    def normalize(self, avlb_raw_data: pd.DataFrame, q: float = 0.995) -> pd.DataFrame:
+    def fillna_by_sector(self, avlb_i_data: pd.DataFrame) -> pd.DataFrame:
+        grp_keys = ["trade_date", "sectorL1"]
+        o_data = avlb_i_data.groupby(by=grp_keys)[self.factor_grp.factor_names].apply(
+            lambda z: z.fillna(z.mean())
+        ).reset_index(level=grp_keys)
+        avlb_o_data = pd.merge(
+            left=avlb_i_data[["trade_date", "instrument", "sectorL1"]],
+            right=o_data[self.factor_grp.factor_names],
+            how="inner",
+            left_index=True, right_index=True,
+        )
+        if (l0 := len(avlb_i_data)) != (l1 := len(avlb_o_data)):
+            raise ValueError(f"len of raw data = {l0} != len of fil data = {l1}.")
+        return avlb_o_data
+
+    def normalize(self, avlb_i_data: pd.DataFrame, q: float = 0.995) -> pd.DataFrame:
         def __normalize(data: pd.DataFrame) -> pd.DataFrame:
             # winsorize
             k = sps.norm.ppf(q)
@@ -260,32 +275,32 @@ class CFactorsAvlb(_CFactorsByInstruDbOperator):
             return z
 
         grp_keys = ["trade_date"]
-        nrm_data = avlb_raw_data.groupby(by=grp_keys)[self.factor_grp.factor_names].apply(
-            __normalize).reset_index(level=0)
-        avlb_nrm_data = pd.merge(
-            left=avlb_raw_data[["trade_date", "instrument", "sectorL1"]],
-            right=nrm_data[self.factor_grp.factor_names],
+        o_data = avlb_i_data.groupby(by=grp_keys)[self.factor_grp.factor_names].apply(
+            __normalize).reset_index(level=grp_keys)
+        avlb_o_data = pd.merge(
+            left=avlb_i_data[["trade_date", "instrument", "sectorL1"]],
+            right=o_data[self.factor_grp.factor_names],
             how="inner",
             left_index=True, right_index=True,
         )
-        if (l0 := len(avlb_raw_data)) != (l1 := len(avlb_nrm_data)):
+        if (l0 := len(avlb_i_data)) != (l1 := len(avlb_o_data)):
             raise ValueError(f"len of raw data = {l0}  != len of nrm data = {l1}.")
-        return avlb_nrm_data
+        return avlb_o_data
 
-    def neutralize(self, avlb_raw_data: pd.DataFrame) -> pd.DataFrame:
+    def neutralize(self, avlb_i_data: pd.DataFrame) -> pd.DataFrame:
         grp_keys = ["trade_date", "sectorL1"]
-        neu_data = avlb_raw_data.groupby(by=grp_keys)[self.factor_grp.factor_names].apply(
+        o_data = avlb_i_data.groupby(by=grp_keys)[self.factor_grp.factor_names].apply(
             lambda z: z - z.mean()
-        ).reset_index(level=[0, 1])
-        avlb_neu_data = pd.merge(
-            left=avlb_raw_data[["trade_date", "instrument", "sectorL1"]],
-            right=neu_data[self.factor_grp.factor_names],
+        ).reset_index(level=grp_keys)
+        avlb_o_data = pd.merge(
+            left=avlb_i_data[["trade_date", "instrument", "sectorL1"]],
+            right=o_data[self.factor_grp.factor_names],
             how="inner",
             left_index=True, right_index=True,
         )
-        if (l0 := len(avlb_raw_data)) != (l1 := len(avlb_neu_data)):
+        if (l0 := len(avlb_i_data)) != (l1 := len(avlb_o_data)):
             raise ValueError(f"len of raw data = {l0}  != len of neu data = {l1}.")
-        return avlb_neu_data
+        return avlb_o_data
 
     def save(self, new_data: pd.DataFrame, calendar: CCalendar, save_type: Literal["raw", "neu"]):
         if save_type == "raw":
@@ -324,8 +339,9 @@ class CFactorsAvlb(_CFactorsByInstruDbOperator):
         ).sort_values(by=["trade_date", "sectorL1"])
 
         # avlb nrm
-        logger.info(f"Normalize available factor {SFG(self.factor_grp.factor_class)}")
-        fac_avlb_nrm_data = self.normalize(fac_avlb_raw_data)
+        logger.info(f"Fill and Normalize available factor {SFG(self.factor_grp.factor_class)}")
+        fac_avlb_fil_data = self.fillna_by_sector(fac_avlb_raw_data)
+        fac_avlb_nrm_data = self.normalize(fac_avlb_fil_data)
         self.save(fac_avlb_nrm_data, calendar, save_type="raw")
 
         # avlb neu

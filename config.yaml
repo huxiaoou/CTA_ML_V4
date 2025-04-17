@@ -185,7 +185,7 @@ factors:
   SKEW:
     wins: [ 3, 5, 10, 20 ]
   KURT:
-    wins: [ 3, 5, 10, 20 ]
+    wins: [ 5, 10, 20 ] #
   RS:
     wins: [ 60, 120, 240 ]
 
