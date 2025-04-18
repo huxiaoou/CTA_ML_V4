@@ -431,9 +431,6 @@ if __name__ == "__main__":
     print(f"cfg_factor_grp.factors = {cfg_factor_grp.factors}")
     assert cfg_factor_grp.factor_class == "SKEW"
 
-    cfg_factors = CCfgFactors()
-    print(f"factors = {cfg_factors.classes}")
-
     model_ridge = CTestModel(
         model_type=TModelType.RIDGE,
         trn_win=60,
