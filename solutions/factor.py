@@ -62,6 +62,13 @@ class _CFactorsByInstruDbOperator:
         return 0
 
     def get_factor_data(self, input_data: pd.DataFrame, bgn_date: str) -> pd.DataFrame:
+        """
+
+        :param input_data:
+        :param bgn_date:
+        :return: a pd.DataFrame with first 2 columns must be = ["trade_date", "ticker"]
+                  then followed by factor names
+        """
         input_data = input_data.query(f"trade_date >= '{bgn_date}'")
         factor_data = input_data[["trade_date", "ticker"] + self.factor_grp.factor_names]
         return factor_data

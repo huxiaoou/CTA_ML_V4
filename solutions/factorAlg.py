@@ -3,7 +3,9 @@ import pandas as pd
 import talib as ta
 import itertools as ittl
 from husfort.qcalendar import CCalendar
+from husfort.qsqlite import CDbStruct
 from typedef import (
+    TFactorClass, CCfgFactors, TUniverse, CCfgFactorGrp,
     CCfgFactorGrpMTM, CCfgFactorGrpSKEW, CCfgFactorGrpKURT,
     CCfgFactorGrpRS,
 )
@@ -71,9 +73,9 @@ class CFactorMTM(CFactorsByInstru):
         super().__init__(factor_grp=cfg, **kwargs)
 
     def cal_factor_by_instru(self, instru: str, bgn_date: str, stp_date: str, calendar: CCalendar) -> pd.DataFrame:
-        win_start_date = self.cfg.buffer_bgn_date(bgn_date, calendar)
+        buffer_bgn_date = self.cfg.buffer_bgn_date(bgn_date, calendar)
         major_data = self.load_preprocess(
-            instru, bgn_date=win_start_date, stp_date=stp_date,
+            instru, bgn_date=buffer_bgn_date, stp_date=stp_date,
             values=["trade_date", "ticker_major", "return_c_major"],
         )
         for win, factor_name in zip(self.cfg.wins, self.cfg.factor_names):
@@ -89,9 +91,9 @@ class CFactorSKEW(CFactorsByInstru):
         super().__init__(factor_grp=cfg, **kwargs)
 
     def cal_factor_by_instru(self, instru: str, bgn_date: str, stp_date: str, calendar: CCalendar) -> pd.DataFrame:
-        win_start_date = self.cfg.buffer_bgn_date(bgn_date, calendar)
+        buffer_bgn_date = self.cfg.buffer_bgn_date(bgn_date, calendar)
         major_data = self.load_preprocess(
-            instru, bgn_date=win_start_date, stp_date=stp_date,
+            instru, bgn_date=buffer_bgn_date, stp_date=stp_date,
             values=["trade_date", "ticker_major", "return_c_major"],
         )
         for win, factor_name in zip(self.cfg.wins, self.cfg.factor_names):
@@ -107,9 +109,9 @@ class CFactorKURT(CFactorsByInstru):
         super().__init__(factor_grp=cfg, **kwargs)
 
     def cal_factor_by_instru(self, instru: str, bgn_date: str, stp_date: str, calendar: CCalendar) -> pd.DataFrame:
-        win_start_date = self.cfg.buffer_bgn_date(bgn_date, calendar)
+        buffer_bgn_date = self.cfg.buffer_bgn_date(bgn_date, calendar)
         major_data = self.load_preprocess(
-            instru, bgn_date=win_start_date, stp_date=stp_date,
+            instru, bgn_date=buffer_bgn_date, stp_date=stp_date,
             values=["trade_date", "ticker_major", "return_c_major"],
         )
         for win, factor_name in zip(self.cfg.wins, self.cfg.factor_names):
@@ -122,16 +124,16 @@ class CFactorKURT(CFactorsByInstru):
 class CFactorRS(CFactorsByInstru):
     def __init__(self, cfg: CCfgFactorGrpRS, **kwargs):
         self.cfg = cfg
+        self.__win_min = min(5, min(self.cfg.wins))
         super().__init__(factor_grp=cfg, **kwargs)
 
     def cal_factor_by_instru(self, instru: str, bgn_date: str, stp_date: str, calendar: CCalendar) -> pd.DataFrame:
-        __min_win = 5
-        win_start_date = self.cfg.buffer_bgn_date(bgn_date, calendar)
+        buffer_bgn_date = self.cfg.buffer_bgn_date(bgn_date, calendar)
         adj_data = self.load_preprocess(
-            instru, bgn_date=win_start_date, stp_date=stp_date,
+            instru, bgn_date=buffer_bgn_date, stp_date=stp_date,
             values=["trade_date", "ticker_major", "stock"],
         )
-        adj_data["stock"] = adj_data["stock"].ffill(limit=__min_win).fillna(0)
+        adj_data["stock"] = adj_data["stock"].ffill(limit=self.__win_min).fillna(0)
         for win in self.cfg.wins:
             rspa = self.cfg.name_rspa(win)
             rsla = self.cfg.name_rsla(win)
@@ -148,3 +150,54 @@ class CFactorRS(CFactorsByInstru):
         self.rename_ticker(adj_data)
         factor_data = self.get_factor_data(adj_data, bgn_date)
         return factor_data
+
+
+"""
+---------------------------------------------------
+Part III: pick factor
+---------------------------------------------------
+"""
+
+
+def pick_factor(
+        fclass: TFactorClass,
+        cfg_factors: CCfgFactors,
+        factors_by_instru_dir: str,
+        universe: TUniverse,
+        preprocess: CDbStruct,
+) -> tuple[CFactorsByInstru, CCfgFactorGrp]:
+    if fclass == TFactorClass.MTM:
+        cfg = cfg_factors.MTM
+        fac = CFactorMTM(
+            cfg=cfg,
+            factors_by_instru_dir=factors_by_instru_dir,
+            universe=universe,
+            db_struct_preprocess=preprocess,
+        )
+    elif fclass == TFactorClass.SKEW:
+        cfg = cfg_factors.SKEW
+        fac = CFactorSKEW(
+            cfg=cfg,
+            factors_by_instru_dir=factors_by_instru_dir,
+            universe=universe,
+            db_struct_preprocess=preprocess,
+        )
+    elif fclass == TFactorClass.KURT:
+        cfg = cfg_factors.KURT
+        fac = CFactorKURT(
+            cfg=cfg,
+            factors_by_instru_dir=factors_by_instru_dir,
+            universe=universe,
+            db_struct_preprocess=preprocess,
+        )
+    elif fclass == TFactorClass.RS:
+        cfg = cfg_factors.RS
+        fac = CFactorRS(
+            cfg=cfg,
+            factors_by_instru_dir=factors_by_instru_dir,
+            universe=universe,
+            db_struct_preprocess=preprocess,
+        )
+    else:
+        raise NotImplementedError(f"Invalid fclass = {fclass}")
+    return fac, cfg

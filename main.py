@@ -124,50 +124,15 @@ if __name__ == "__main__":
             test_returns_avlb.main(bgn_date, stp_date, calendar)
     elif args.switch == "factor":
         from solutions.factor import CFactorsAvlb
+        from solutions.factorAlg import pick_factor
 
-        cfg = getattr(cfg_factors, args.fclass)
-        if cfg is None:
-            logger.warning(f"No cfg for {args.fclass}")
-            sys.exit(0)
-        if args.fclass == "MTM":
-            from solutions.factorAlg import CFactorMTM
-
-            fac = CFactorMTM(
-                cfg=cfg,
-                factors_by_instru_dir=proj_cfg.factors_by_instru_dir,
-                universe=proj_cfg.universe,
-                db_struct_preprocess=db_struct_cfg.preprocess,
-            )
-        elif args.fclass == "SKEW":
-            from solutions.factorAlg import CFactorSKEW
-
-            fac = CFactorSKEW(
-                cfg=cfg,
-                factors_by_instru_dir=proj_cfg.factors_by_instru_dir,
-                universe=proj_cfg.universe,
-                db_struct_preprocess=db_struct_cfg.preprocess,
-            )
-        elif args.fclass == "KURT":
-            from solutions.factorAlg import CFactorKURT
-
-            fac = CFactorKURT(
-                cfg=cfg,
-                factors_by_instru_dir=proj_cfg.factors_by_instru_dir,
-                universe=proj_cfg.universe,
-                db_struct_preprocess=db_struct_cfg.preprocess,
-            )
-        elif args.fclass == "RS":
-            from solutions.factorAlg import CFactorRS
-
-            fac = CFactorRS(
-                cfg=cfg,
-                factors_by_instru_dir=proj_cfg.factors_by_instru_dir,
-                universe=proj_cfg.universe,
-                db_struct_preprocess=db_struct_cfg.preprocess,
-            )
-        else:
-            raise NotImplementedError(f"fclass = {args.fclass}")
-
+        fac, cfg = pick_factor(
+            fclass=args.fclass,
+            cfg_factors=cfg_factors,
+            factors_by_instru_dir=proj_cfg.factors_by_instru_dir,
+            universe=proj_cfg.universe,
+            preprocess=db_struct_cfg.preprocess,
+        )
         fac.main(
             bgn_date=bgn_date, stp_date=stp_date, calendar=calendar,
             call_multiprocess=not args.nomp, processes=args.processes,

@@ -67,7 +67,14 @@ Part II: factors configuration
 ----------------------------------
 """
 
-TFactorClass = NewType("TFactorClass", str)
+
+class TFactorClass(StrEnum):
+    MTM = "MTM"
+    SKEW = "SKEW"
+    KURT = "KURT"
+    RS = "RS"
+
+
 TFactorName = NewType("TFactorName", str)
 TFactorNames = list[TFactorName]
 
@@ -124,25 +131,25 @@ class _CCfgFactorGrpWin(CCfgFactorGrp):
 class CCfgFactorGrpMTM(_CCfgFactorGrpWin):
     @property
     def factor_class(self) -> TFactorClass:
-        return TFactorClass("MTM")
+        return TFactorClass.MTM
 
 
 class CCfgFactorGrpSKEW(_CCfgFactorGrpWin):
     @property
     def factor_class(self) -> TFactorClass:
-        return TFactorClass("SKEW")
+        return TFactorClass.SKEW
 
 
 class CCfgFactorGrpKURT(_CCfgFactorGrpWin):
     @property
     def factor_class(self) -> TFactorClass:
-        return TFactorClass("KURT")
+        return TFactorClass.KURT
 
 
 class CCfgFactorGrpRS(_CCfgFactorGrpWin):
     @property
     def factor_class(self) -> TFactorClass:
-        return TFactorClass("RS")
+        return TFactorClass.RS
 
     def name_rspa(self, w: int) -> str:
         return f"{self.factor_class}PA{w:03d}"
@@ -163,10 +170,10 @@ class CCfgFactorGrpRS(_CCfgFactorGrpWin):
 
 @dataclass(frozen=True)
 class CCfgFactors:
-    MTM: CCfgFactorGrpMTM | None = None
-    SKEW: CCfgFactorGrpSKEW | None = None
-    KURT: CCfgFactorGrpKURT | None = None
-    RS: CCfgFactorGrpRS | None = None
+    MTM: CCfgFactorGrpMTM
+    SKEW: CCfgFactorGrpSKEW
+    KURT: CCfgFactorGrpKURT
+    RS: CCfgFactorGrpRS
 
     @property
     def classes(self) -> list[str]:
@@ -439,8 +446,8 @@ if __name__ == "__main__":
         ret=CRet.parse_from_name("Opn010L1"),
         ret_type=TFacRetType.RAW,
         factors=[
-            CFactor(TFactorClass("MTM"), TFactorName("MTM001")),
-            CFactor(TFactorClass("SKEW"), TFactorName("SKEW002")),
+            CFactor(TFactorClass.MTM, TFactorName("MTM001")),
+            CFactor(TFactorClass.SKEW, TFactorName("SKEW002")),
         ],
         factor_type=TFacRetType.NEU,
         universe=TUniverse({
