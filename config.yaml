@@ -194,11 +194,23 @@ factors:
 # ------- factors universe -------
 factors_universe_options:
   Opn:
-    - [ MTM, MTM001 ]
-    - [ SKEW, SKEW020 ]
-  Cls:
+    - [ MTM, MTM003 ]
+    - [ MTM, MTM240 ]
+    - [ SKEW, SKEW010 ]
     - [ KURT, KURT010 ]
     - [ RS, RSPA120 ]
+    - [ RS, RSDIF ]
+    - [ BASIS, BASIS120]
+    - [ BASIS, BASISRES010]
+  Cls:
+    - [ MTM, MTM001 ]
+    - [ MTM, MTM240 ]
+    - [ SKEW, SKEW020 ]
+    - [ KURT, KURT010 ]
+    - [ RS, RSPA120 ]
+    - [ RS, RSDIF ]
+    - [ BASIS, BASIS120 ]
+    - [ BASIS, BASISRES010 ]
 
 # ------- models -------
 test_models:
