@@ -1,13 +1,11 @@
 import numpy as np
 import pandas as pd
-import talib as ta
-import itertools as ittl
 from husfort.qcalendar import CCalendar
 from husfort.qsqlite import CDbStruct
 from typedef import (
     TFactorClass, CCfgFactors, TUniverse, CCfgFactorGrp,
     CCfgFactorGrpMTM, CCfgFactorGrpSKEW, CCfgFactorGrpKURT,
-    CCfgFactorGrpRS,
+    CCfgFactorGrpRS, CCfgFactorGrpBASIS,
 )
 from solutions.factor import CFactorsByInstru
 
@@ -152,6 +150,24 @@ class CFactorRS(CFactorsByInstru):
         return factor_data
 
 
+class CFactorBASIS(CFactorsByInstru):
+    def __init__(self, cfg: CCfgFactorGrpBASIS, **kwargs):
+        self.cfg = cfg
+        super().__init__(factor_grp=cfg, **kwargs)
+
+    def cal_factor_by_instru(self, instru: str, bgn_date: str, stp_date: str, calendar: CCalendar) -> pd.DataFrame:
+        buffer_bgn_date = self.cfg.buffer_bgn_date(bgn_date, calendar)
+        adj_data = self.load_preprocess(
+            instru, bgn_date=buffer_bgn_date, stp_date=stp_date,
+            values=["trade_date", "ticker_major", "basis_rate"],
+        )
+        for win, factor_name in zip(self.cfg.wins, self.cfg.factor_names):
+            adj_data[factor_name] = adj_data["basis_rate"].rolling(window=win, min_periods=int(2 * win / 3)).mean()
+        self.rename_ticker(adj_data)
+        factor_data = self.get_factor_data(adj_data, bgn_date)
+        return factor_data
+
+
 """
 ---------------------------------------------------
 Part III: pick factor
@@ -193,6 +209,14 @@ def pick_factor(
     elif fclass == TFactorClass.RS:
         cfg = cfg_factors.RS
         fac = CFactorRS(
+            cfg=cfg,
+            factors_by_instru_dir=factors_by_instru_dir,
+            universe=universe,
+            db_struct_preprocess=preprocess,
+        )
+    elif fclass == TFactorClass.BASIS:
+        cfg = cfg_factors.BASIS
+        fac = CFactorBASIS(
             cfg=cfg,
             factors_by_instru_dir=factors_by_instru_dir,
             universe=universe,

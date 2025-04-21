@@ -4,8 +4,11 @@ from typedef import (TUniverse, TInstruName, TReturnClass, TFactorClass, TFactor
                      CCfgInstru, CCfgAvlbUnvrs, CCfgMktIdx, CCfgConst, CTestModel)
 from typedef import CCfgPrd, CCfgSim
 from typedef import CCfgProj, CCfgDbStruct
-from typedef import (CCfgFactors,
-                     CCfgFactorGrpMTM, CCfgFactorGrpSKEW, CCfgFactorGrpKURT, CCfgFactorGrpRS)
+from typedef import (
+    CCfgFactors,
+    CCfgFactorGrpMTM, CCfgFactorGrpSKEW, CCfgFactorGrpKURT,
+    CCfgFactorGrpRS, CCfgFactorGrpBASIS,
+)
 
 # ---------- project configuration ----------
 
@@ -98,6 +101,7 @@ cfg_factors = CCfgFactors(
     SKEW=CCfgFactorGrpSKEW(**proj_cfg.factors["SKEW"]),
     KURT=CCfgFactorGrpKURT(**proj_cfg.factors["KURT"]),
     RS=CCfgFactorGrpRS(**proj_cfg.factors["RS"]),
+    BASIS=CCfgFactorGrpBASIS(**proj_cfg.factors["BASIS"]),
 )
 
 if __name__ == "__main__":

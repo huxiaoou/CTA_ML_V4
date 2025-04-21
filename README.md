@@ -46,10 +46,32 @@ make sure the algorithm of each factor is symmetrical about 0
 ### ic-tests
 
 + data
-  + F1_RAW_Cls001L1_RAW.db
-  + F1_NEU_Cls001L1_NEU.db
-  + ...
+    + F1_RAW_Cls001L1_RAW.db
+    + F1_NEU_Cls001L1_NEU.db
+    + ...
 + plot
-  + F1_RAW_Cls001L1_RAW.pdf
-  + F1_NEU_Cls001L1_NEU.pdf
-  + ...
+    + F1_RAW_Cls001L1_RAW.pdf
+    + F1_NEU_Cls001L1_NEU.pdf
+    + ...
+
+## Steps to add new factor
+
+config.yaml
+
++ update args
+
+typedef.py
+
++ update TFactorClass
++ new class CCfgFactorGrpNewFactor
++ update CCfgFactors
+
+config.py
+
++ update cfg_factors
+
+factorAlg.py
+
++ from typedef import CCfgFactorGrpNewFactor
++ new class CFactorNewFactor
++ update pick_factor

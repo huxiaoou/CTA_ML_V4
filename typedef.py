@@ -73,6 +73,7 @@ class TFactorClass(StrEnum):
     SKEW = "SKEW"
     KURT = "KURT"
     RS = "RS"
+    BASIS = "BASIS"
 
 
 TFactorName = NewType("TFactorName", str)
@@ -168,12 +169,19 @@ class CCfgFactorGrpRS(_CCfgFactorGrpWin):
         return TFactorNames(rspa + rsla + rsdif)
 
 
+class CCfgFactorGrpBASIS(_CCfgFactorGrpWin):
+    @property
+    def factor_class(self) -> TFactorClass:
+        return TFactorClass.BASIS
+
+
 @dataclass(frozen=True)
 class CCfgFactors:
     MTM: CCfgFactorGrpMTM
     SKEW: CCfgFactorGrpSKEW
     KURT: CCfgFactorGrpKURT
     RS: CCfgFactorGrpRS
+    BASIS: CCfgFactorGrpBASIS
 
     @property
     def classes(self) -> list[str]:
