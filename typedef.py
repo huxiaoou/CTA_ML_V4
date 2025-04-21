@@ -117,7 +117,7 @@ class _CCfgFactorGrpWin(CCfgFactorGrp):
 
     @property
     def factor_names(self) -> TFactorNames:
-        return TFactorNames([TFactorName(f"{self.factor_class}{w:03d}") for w in self.wins])
+        return [TFactorName(f"{self.factor_class}{w:03d}") for w in self.wins]
 
     def buffer_bgn_date(self, bgn_date: str, calendar: CCalendar, shift: int = -5) -> str:
         return calendar.get_next_date(bgn_date, -max(self.wins) + shift)
@@ -170,6 +170,18 @@ class CCfgFactorGrpRS(_CCfgFactorGrpWin):
 
 
 class CCfgFactorGrpBASIS(_CCfgFactorGrpWin):
+    @property
+    def names_ma(self) -> TFactorNames:
+        return super().factor_names
+
+    @property
+    def names_res(self) -> TFactorNames:
+        return [TFactorName(f"{self.factor_class}RES{w:03d}") for w in self.wins]
+
+    @property
+    def factor_names(self) -> TFactorNames:
+        return self.names_ma + self.names_res
+
     @property
     def factor_class(self) -> TFactorClass:
         return TFactorClass.BASIS

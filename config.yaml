@@ -189,7 +189,7 @@ factors:
   RS:
     wins: [ 60, 120, 240 ]
   BASIS:
-    wins: [ 60, 120, 240 ]
+    wins: [ 10, 20, 60, 120, 240 ]
 
 # ------- factors universe -------
 factors_universe_options:
