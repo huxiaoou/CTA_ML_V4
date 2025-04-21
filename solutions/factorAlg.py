@@ -132,10 +132,7 @@ class CFactorRS(CFactorsByInstru):
             values=["trade_date", "ticker_major", "stock"],
         )
         adj_data["stock"] = adj_data["stock"].ffill(limit=self.__win_min).fillna(0)
-        for win in self.cfg.wins:
-            rspa = self.cfg.name_rspa(win)
-            rsla = self.cfg.name_rsla(win)
-
+        for win, rspa, rsla in zip(self.cfg.wins, self.cfg.names_rspa, self.cfg.names_rsla):
             ma = adj_data["stock"].rolling(window=win).mean()
             s = adj_data["stock"] / ma.where(ma > 0, np.nan)
             adj_data[rspa] = 1 - s

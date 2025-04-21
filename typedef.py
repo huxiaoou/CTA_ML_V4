@@ -152,21 +152,30 @@ class CCfgFactorGrpRS(_CCfgFactorGrpWin):
     def factor_class(self) -> TFactorClass:
         return TFactorClass.RS
 
-    def name_rspa(self, w: int) -> str:
-        return f"{self.factor_class}PA{w:03d}"
+    def name_rspa(self, w: int) -> TFactorName:
+        return TFactorName(f"{self.factor_class}PA{w:03d}")
 
-    def name_rsla(self, w: int) -> str:
-        return f"{self.factor_class}LA{w:03d}"
+    def name_rsla(self, w: int) -> TFactorName:
+        return TFactorName(f"{self.factor_class}LA{w:03d}")
 
-    def name_diff(self) -> str:
-        return f"{self.factor_class}DIF"
+    def name_diff(self) -> TFactorName:
+        return TFactorName(f"{self.factor_class}DIF")
+
+    @property
+    def names_rspa(self) -> TFactorNames:
+        return [self.name_rspa(w) for w in self.wins]
+
+    @property
+    def names_rsla(self) -> TFactorNames:
+        return [self.name_rsla(w) for w in self.wins]
+
+    @property
+    def names_diff(self) -> TFactorNames:
+        return [self.name_diff()]
 
     @property
     def factor_names(self) -> TFactorNames:
-        rspa = [TFactorName(self.name_rspa(w)) for w in self.wins]
-        rsla = [TFactorName(self.name_rsla(w)) for w in self.wins]
-        rsdif = [TFactorName(self.name_diff())]
-        return TFactorNames(rspa + rsla + rsdif)
+        return self.names_rspa + self.names_rsla + self.names_diff
 
 
 class CCfgFactorGrpBASIS(_CCfgFactorGrpWin):
