@@ -250,6 +250,7 @@ class CTestModel:
     model_type: TModelType
     trn_win: int
     using_instru: bool = False
+    classification: bool = False
     cv: int = 0
     hyper_param_grids: dict | dict[str, list] = None  # must be provided if cv > 0
 
@@ -263,6 +264,7 @@ class CTestModel:
             "model_type": self.model_type,
             "trn_win": self.trn_win,
             "using_instru": self.using_instru,
+            "classification": self.classification,
             "cv": self.cv,
             "hyper_param_grids": self.hyper_param_grids,
         }

@@ -73,4 +73,5 @@ def main_evl_tests(tests: list[CTestMclrn], sim_save_dir: str, evl_save_dir: str
     summary_all_file = "summary_all.csv"
     summary_all_path = os.path.join(evl_save_dir, summary_all_file)
     summary_all.to_csv(summary_all_path, float_format="%.3f", index=False)
+    print(summary_all.head(12))
     return 0

@@ -200,8 +200,8 @@ factors_universe_options:
     - [ KURT, KURT010 ]
     - [ RS, RSPA120 ]
     - [ RS, RSDIF ]
-    - [ BASIS, BASIS120]
-    - [ BASIS, BASISRES010]
+    - [ BASIS, BASIS120 ]
+    - [ BASIS, BASISRES010 ]
   Cls:
     - [ MTM, MTM001 ]
     - [ MTM, MTM240 ]
@@ -217,17 +217,20 @@ test_models:
   - model_type: LINEAR
     trn_win: 60
     using_instru: false
+    classification: false
     cv: 0
     hyper_param_grids:
   - model_type: RIDGE
     trn_win: 60
     using_instru: false
+    classification: false
     cv: 5
     hyper_param_grids:
       alpha: [ 0.01, 1, 10 ]
   - model_type: LGBM
     trn_win: 60
     using_instru: true
+    classification: true
     cv: 5
     hyper_param_grids:
       boosting_type: [ "gbdt" ]
@@ -235,10 +238,11 @@ test_models:
       max_depth: [ 3 ]
       num_leaves: [ 2, 4, 8 ]
       learning_rate: [ 0.01, 0.05, 0.1 ]
-      metric: [ "l1" ]
+      metric: [ "binary_logloss" ] # ["l1", "l2"] for regressor, ["binary_logloss"] for classifier
   - model_type: XGB
     trn_win: 60
     using_instru: true
+    classification: true
     cv: 5
     hyper_param_grids:
       booster: [ "gbtree" ] # ["gbtree", "gblinear", "dart"]
@@ -246,9 +250,7 @@ test_models:
       max_depth: [ 3 ]
       max_leaves: [ 2, 4, 8 ]
       learning_rate: [ 0.01, 0.05, 0.1 ]
-      objective: [ "reg:absoluteerror" ] # ["reg:squarederror", "reg:absoluteerror"]
-      grow_policy: [ "lossguide" ] # ["depthwise", "lossguide"]
-
+      objective: [ "binary:logistic" ] # ["reg:squarederror", "reg:absoluteerror", "binary:logistic"]
 CONST:
   INIT_CASH: 100_000_000
   COST_RATE: 0.0003

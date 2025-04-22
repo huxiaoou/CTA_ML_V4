@@ -142,7 +142,12 @@ class CTestMclrn:
             x, y = x_data.reset_index(level="instrument"), y_data
             x["instrument"] = x["instrument"].astype("category")
         else:
-            x, y = x_data.values, y_data.values
+            x, y = x_data, y_data
+
+        if self.test_model.classification:
+            y = y.mask(y >= 0, other=1)
+            y = y.mask(y < 0, other=0)
+
         if self.test_model.cv > 0:
             grid_cv_seeker = GridSearchCV(
                 self.prototype,
@@ -177,8 +182,8 @@ class CTestMclrn:
                 trusted=[
                     "collections.defaultdict",
                     "collections.OrderedDict",
-                    "lightgbm.basic.Booster", "lightgbm.sklearn.LGBMRegressor",
-                    "xgboost.core.Booster", "xgboost.sklearn.XGBRegressor",
+                    "lightgbm.basic.Booster", "lightgbm.sklearn.LGBMRegressor", "lightgbm.sklearn.LGBMClassifier",
+                    "xgboost.core.Booster", "xgboost.sklearn.XGBRegressor", "xgboost.sklearn.XGBClassifier",
                     "sklearn.metrics._scorer._PassthroughScorer",
                     "sklearn.utils._metadata_requests.MetadataRequest",
                     "sklearn.utils._metadata_requests.MethodMetadataRequest",
@@ -195,8 +200,10 @@ class CTestMclrn:
             x = x_data.reset_index(level="instrument")
             x["instrument"] = x["instrument"].astype("category")
         else:
-            x = x_data.values
+            x = x_data
         pred = self.fitted_estimator.predict(X=x)  # type:ignore
+        if self.test_model.classification:
+            pred = pred * 2 - 1  # (0, 1) ->(-1, 1)
         return pd.Series(data=pred, name=self.y_col, index=x_data.index)
 
     def train(self, model_update_day: str, calendar: CCalendar, verbose: bool):
@@ -321,9 +328,10 @@ class CTestMclrnRidge(CTestMclrn):
 class CTestMclrnLGBM(CTestMclrn):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.prototype = lgb.LGBMRegressor(
+        # self.prototype = lgb.LGBMRegressor(
+        self.prototype = lgb.LGBMClassifier(
             # other fixed parameters
-            force_row_wise=True,  # cpu device only
+            # force_row_wise=True,  # cpu device only
             verbose=-1,
             random_state=self.RANDOM_STATE,
             # device_type="gpu", # for small data cpu is much faster
@@ -343,7 +351,8 @@ class CTestMclrnLGBM(CTestMclrn):
 class CTestMclrnXGB(CTestMclrn):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.prototype = xgb.XGBRegressor(
+        # self.prototype = xgb.XGBRegressor(
+        self.prototype = xgb.XGBClassifier(
             # other fixed parameters
             verbosity=0,
             random_state=self.RANDOM_STATE,
