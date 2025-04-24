@@ -1,23 +1,25 @@
 import os
-import multiprocessing as mp
 import numpy as np
 import pandas as pd
 import skops.io as sio
 from dataclasses import dataclass
 from loguru import logger
-from rich.progress import track, Progress
 from sklearn.model_selection import GridSearchCV
 from sklearn.linear_model import LinearRegression, Ridge
 import lightgbm as lgb
 import xgboost as xgb
 from husfort.qcalendar import CCalendar
 from husfort.qsqlite import CMgrSqlDb
-from husfort.qutility import SFG, SFY, check_and_makedirs, error_handler, qtimer
+from husfort.qutility import SFG, SFY, check_and_makedirs, qtimer
+from husfort.qmultiprocessing import TTask, mul_process_for_tasks, uni_process_for_tasks, CAgentQueue, EStatusWorker
 from solutions.shared import gen_factors_avlb_db, gen_test_returns_avlb_db, gen_prdct_db
 from typedef import (
     TReturnName, TFactorNames, CFactor,
     CTestData, CTestModel,
 )
+
+logger.remove()
+logger.add("mclrn.log")
 
 """
 Part I: Base class for Machine Learning
@@ -234,10 +236,14 @@ class CTestMclrn:
             )
         return 0
 
-    def process_trn(self, bgn_date: str, stp_date: str, calendar: CCalendar, verbose: bool):
+    def process_trn(self, agent_queue: CAgentQueue, bgn_date: str, stp_date: str, calendar: CCalendar, verbose: bool):
         model_update_days = calendar.get_last_days_in_range(bgn_date=bgn_date, stp_date=stp_date)
+        agent_queue.set_description(f"{self.save_id:<48s} train")
+        agent_queue.set_completed(0)
+        agent_queue.set_total(len(model_update_days))
         for model_update_day in model_update_days:
             self.train(model_update_day, calendar, verbose)
+            agent_queue.set_advance(advance=1)
         return 0
 
     def predict(
@@ -265,12 +271,18 @@ class CTestMclrn:
         else:
             return pd.Series(dtype=np.float64)
 
-    def process_prd(self, bgn_date: str, stp_date: str, calendar: CCalendar, verbose: bool) -> pd.DataFrame:
+    def process_prd(
+            self, agent_queue: CAgentQueue, bgn_date: str, stp_date: str, calendar: CCalendar, verbose: bool,
+    ) -> pd.DataFrame:
         months_groups = calendar.split_by_month(dates=calendar.get_iter_list(bgn_date, stp_date))
+        agent_queue.set_description(f"{self.save_id:<48s} predict")
+        agent_queue.set_completed(0)
+        agent_queue.set_total(len(months_groups))
         pred_res: list[pd.Series] = []
         for prd_month_id, prd_month_days in months_groups.items():
             month_prediction = self.predict(prd_month_id, prd_month_days, calendar, verbose)
             pred_res.append(month_prediction)
+            agent_queue.set_advance(advance=1)
         prediction = pd.concat(pred_res, axis=0, ignore_index=False)
         prediction.index = pd.MultiIndex.from_tuples(prediction.index, names=self.XY_INDEX)
         sorted_prediction = prediction.reset_index().sort_values(["trade_date", "instrument"])
@@ -289,10 +301,16 @@ class CTestMclrn:
             sqldb.update(update_data=prediction)
         return 0
 
-    def main_mclrn_model(self, bgn_date: str, stp_date: str, calendar: CCalendar, verbose: bool):
-        self.process_trn(bgn_date, stp_date, calendar, verbose)
-        prediction = self.process_prd(bgn_date, stp_date, calendar, verbose)
+    def main_mclrn_model(
+            self,
+            agent_queue: CAgentQueue,
+            bgn_date: str, stp_date: str, calendar: CCalendar,
+            verbose: bool,
+    ):
+        self.process_trn(agent_queue, bgn_date, stp_date, calendar, verbose)
+        prediction = self.process_prd(agent_queue, bgn_date, stp_date, calendar, verbose)
         self.process_save_prediction(prediction, calendar)
+        agent_queue.set_status(EStatusWorker.FINISHED)
         return 0
 
 
@@ -309,7 +327,7 @@ class CTestMclrnLinear(CTestMclrn):
     def display_fitted_estimator(self) -> None:
         score = self.train_score
         text = f"{self.save_id}, score = {score:>9.6f}"
-        print(text)
+        logger.info(text)
 
 
 class CTestMclrnRidge(CTestMclrn):
@@ -321,8 +339,7 @@ class CTestMclrnRidge(CTestMclrn):
         alpha = self.fitted_estimator.best_estimator_.alpha
         score = self.train_score
         text = f"{self.save_id}, best alpha = {alpha:>6.1f}, score = {score:>9.6f}"
-        print(text)
-        # print(coef)
+        logger.info(text)
 
 
 class CTestMclrnLGBM(CTestMclrn):
@@ -345,7 +362,7 @@ class CTestMclrnLGBM(CTestMclrn):
                f"num_leaves = {best_estimator.num_leaves:>2d}, " \
                f"learning_rate = {best_estimator.learning_rate:>4.2f}, " \
                f"score = {score:>9.6f}"
-        print(text)
+        logger.info(text)
 
 
 class CTestMclrnXGB(CTestMclrn):
@@ -368,7 +385,7 @@ class CTestMclrnXGB(CTestMclrn):
                f"max_leaves = {best_estimator.max_leaves:>2d}, " \
                f"learning_rate = {best_estimator.learning_rate:>4.2f}, " \
                f"score = {score:>9.6f}"
-        print(text)
+        logger.info(text)
 
 
 @qtimer
@@ -381,32 +398,12 @@ def main_train_and_predict(
         processes: int,
         verbose: bool,
 ):
-    desc = "Training and predicting for machine learning"
+    tasks: list[TTask] = [
+        TTask((test.main_mclrn_model, (bgn_date, stp_date, calendar, verbose)))
+        for test in tests
+    ]
     if call_multiprocess:
-        with Progress() as pb:
-            main_task = pb.add_task(description=desc, total=len(tests))
-            with mp.get_context("spawn").Pool(processes=processes) as pool:
-                for test in tests:
-                    pool.apply_async(
-                        test.main_mclrn_model,
-                        kwds={
-                            "bgn_date": bgn_date,
-                            "stp_date": stp_date,
-                            "calendar": calendar,
-                            "verbose": verbose,
-                        },
-                        callback=lambda _: pb.update(task_id=main_task, advance=1),
-                        error_callback=error_handler,
-                    )
-                pool.close()
-                pool.join()
+        mul_process_for_tasks(tasks=tasks, processes=processes, callback_log=lambda s: logger.info(s))
     else:
-        for test in track(tests, description=desc):
-            # for test in tests:
-            test.main_mclrn_model(
-                bgn_date=bgn_date,
-                stp_date=stp_date,
-                calendar=calendar,
-                verbose=verbose,
-            )
+        uni_process_for_tasks(tasks=tasks, callback_log=lambda s: logger.info(s))
     return 0

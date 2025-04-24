@@ -67,7 +67,6 @@ def parse_args(cfg_facs: CCfgFactors):
 
 
 if __name__ == "__main__":
-    import sys
     from loguru import logger
     from config import proj_cfg, db_struct_cfg, cfg_factors
     from husfort.qlog import define_logger
