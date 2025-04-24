@@ -214,19 +214,19 @@ factors_universe_options:
 
 # ------- models -------
 test_models:
-  #  - model_type: LINEAR
-  #    trn_win: 60
-  #    using_instru: false
-  #    classification: false
-  #    cv: 0
-  #    hyper_param_grids:
-  #  - model_type: RIDGE
-  #    trn_win: 60
-  #    using_instru: false
-  #    classification: false
-  #    cv: 5
-  #    hyper_param_grids:
-  #      alpha: [ 0.01, 1, 10 ]
+  - model_type: LINEAR
+    trn_win: 60
+    using_instru: false
+    classification: false
+    cv: 0
+    hyper_param_grids:
+  - model_type: RIDGE
+    trn_win: 60
+    using_instru: false
+    classification: false
+    cv: 5
+    hyper_param_grids:
+      alpha: [ 0.01, 1, 10 ]
   - model_type: LGBM
     trn_win: 120
     using_instru: true

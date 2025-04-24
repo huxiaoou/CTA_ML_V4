@@ -18,9 +18,6 @@ from typedef import (
     CTestData, CTestModel,
 )
 
-logger.remove()
-logger.add("mclrn.log")
-
 """
 Part I: Base class for Machine Learning
 """
@@ -307,6 +304,8 @@ class CTestMclrn:
             bgn_date: str, stp_date: str, calendar: CCalendar,
             verbose: bool,
     ):
+        logger.remove()
+        logger.add("mclrn.log")
         self.process_trn(agent_queue, bgn_date, stp_date, calendar, verbose)
         prediction = self.process_prd(agent_queue, bgn_date, stp_date, calendar, verbose)
         self.process_save_prediction(prediction, calendar)
