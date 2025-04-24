@@ -76,8 +76,12 @@ class CFactorMTM(CFactorsByInstru):
             instru, bgn_date=buffer_bgn_date, stp_date=stp_date,
             values=["trade_date", "ticker_major", "return_c_major"],
         )
-        for win, factor_name in zip(self.cfg.wins, self.cfg.factor_names):
+        for win, factor_name in zip(self.cfg.wins, self.cfg.names_ma):
             major_data[factor_name] = major_data["return_c_major"].rolling(window=win).sum()
+        for win, factor_name in zip(self.cfg.wins[0:6], self.cfg.names_diff):
+            max_win = max(self.cfg.wins)
+            n0, n1 = self.cfg.factor_name(max_win), self.cfg.factor_name(win)
+            major_data[factor_name] = major_data[n0] * np.sqrt(win / max_win) - major_data[n1]
         self.rename_ticker(major_data)
         factor_data = self.get_factor_data(major_data, bgn_date)
         return factor_data

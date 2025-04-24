@@ -19,36 +19,36 @@ mkt_idxes:
   commodity: NH0100.NHF
 
 universe:
-  AU.SHF:
-    sectorL0: C
-    sectorL1: AUG
-  AG.SHF:
-    sectorL0: C
-    sectorL1: AUG
-  CU.SHF:
-    sectorL0: C
-    sectorL1: MTL
-  AL.SHF:
-    sectorL0: C
-    sectorL1: MTL
-  PB.SHF:
-    sectorL0: C
-    sectorL1: MTL
-  ZN.SHF:
-    sectorL0: C
-    sectorL1: MTL
-  NI.SHF:
-    sectorL0: C
-    sectorL1: MTL
-  SN.SHF:
-    sectorL0: C
-    sectorL1: MTL
-  SS.SHF:
-    sectorL0: C
-    sectorL1: MTL
-  AO.SHF:
-    sectorL0: C
-    sectorL1: MTL
+  #  AU.SHF:
+  #    sectorL0: C
+  #    sectorL1: AUG
+  #  AG.SHF:
+  #    sectorL0: C
+  #    sectorL1: AUG
+  #  CU.SHF:
+  #    sectorL0: C
+  #    sectorL1: MTL
+  #  AL.SHF:
+  #    sectorL0: C
+  #    sectorL1: MTL
+  #  PB.SHF:
+  #    sectorL0: C
+  #    sectorL1: MTL
+  #  ZN.SHF:
+  #    sectorL0: C
+  #    sectorL1: MTL
+  #  NI.SHF:
+  #    sectorL0: C
+  #    sectorL1: MTL
+  #  SN.SHF:
+  #    sectorL0: C
+  #    sectorL1: MTL
+  #  SS.SHF:
+  #    sectorL0: C
+  #    sectorL1: MTL
+  #  AO.SHF:
+  #    sectorL0: C
+  #    sectorL1: MTL
   A.DCE:
     sectorL0: C
     sectorL1: OIL
@@ -181,7 +181,7 @@ sim:
 # ------- factors -------
 factors:
   MTM:
-    wins: [ 1, 3, 120, 240 ]
+    wins: [ 1, 2, 3, 5, 10, 20, 120, 240 ]
   SKEW:
     wins: [ 3, 5, 10, 20 ]
   KURT:
@@ -194,8 +194,7 @@ factors:
 # ------- factors universe -------
 factors_universe_options:
   Opn:
-    - [ MTM, MTM003 ]
-    - [ MTM, MTM240 ]
+    - [ MTM, MTMD005 ]
     - [ SKEW, SKEW010 ]
     - [ KURT, KURT010 ]
     - [ RS, RSPA120 ]
@@ -203,8 +202,7 @@ factors_universe_options:
     - [ BASIS, BASIS120 ]
     - [ BASIS, BASISRES010 ]
   Cls:
-    - [ MTM, MTM001 ]
-    - [ MTM, MTM240 ]
+    - [ MTM, MTMD005 ]
     - [ SKEW, SKEW020 ]
     - [ KURT, KURT010 ]
     - [ RS, RSPA120 ]
@@ -254,5 +252,6 @@ test_models:
 CONST:
   INIT_CASH: 100_000_000
   COST_RATE: 0.0003
-  SECTORS: [ "AUG", "MTL", "BLK", "OIL", "CHM", "AGR" ]
+  #  SECTORS: [ "AUG", "MTL", "BLK", "OIL", "CHM", "AGR" ]
+  SECTORS: [ "BLK", "OIL", "CHM", "AGR" ]
   LAG: 1

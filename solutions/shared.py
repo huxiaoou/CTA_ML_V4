@@ -24,25 +24,17 @@ def get_avlb_db(available_dir: str) -> CDbStruct:
     )
 
 
-def get_market_db(market_dir: str) -> CDbStruct:
+def get_market_db(market_dir: str, sectors: list[str]) -> CDbStruct:
+    v_s0 = [CSqlVar("market", "REAL"), CSqlVar("C", "REAL")]
+    v_s1 = [CSqlVar(s, "REAL") for s in sectors]
+    v_idx = [CSqlVar("INH0100_NHF", "REAL"), CSqlVar("I881001_WI", "REAL")]
     return CDbStruct(
         db_save_dir=market_dir,
         db_name="market.db",
         table=CSqlTable(
             name="market",
             primary_keys=[CSqlVar("trade_date", "TEXT")],
-            value_columns=[
-                CSqlVar("market", "REAL"),
-                CSqlVar("C", "REAL"),
-                CSqlVar("AUG", "REAL"),
-                CSqlVar("MTL", "REAL"),
-                CSqlVar("BLK", "REAL"),
-                CSqlVar("OIL", "REAL"),
-                CSqlVar("CHM", "REAL"),
-                CSqlVar("AGR", "REAL"),
-                CSqlVar("INH0100_NHF", "REAL"),
-                CSqlVar("I881001_WI", "REAL"),
-            ],
+            value_columns=v_s0 + v_s1 + v_idx,
         )
     )
 

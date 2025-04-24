@@ -98,7 +98,7 @@ if __name__ == "__main__":
             bgn_date=bgn_date, stp_date=stp_date,
             calendar=calendar,
             db_struct_avlb=get_avlb_db(proj_cfg.available_dir),
-            db_struct_mkt=get_market_db(proj_cfg.market_dir),
+            db_struct_mkt=get_market_db(proj_cfg.market_dir, proj_cfg.const.SECTORS),
             path_mkt_idx_data=proj_cfg.market_index_path,
             mkt_idxes=proj_cfg.mkt_idxes.idxes,
             sectors=proj_cfg.const.SECTORS,
