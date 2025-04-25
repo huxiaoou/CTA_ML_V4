@@ -333,7 +333,7 @@ class CTestMclrnLinear(CTestMclrn):
 
     def display_fitted_estimator(self) -> None:
         score = self.train_score
-        text = f"{self.save_id}, score = {score:>9.6f}"
+        text = f"{self.save_id:<48s}| score = {score:>9.6f}"
         logger.info(text)
 
 
@@ -345,7 +345,7 @@ class CTestMclrnRidge(CTestMclrn):
     def display_fitted_estimator(self) -> None:
         alpha = self.fitted_estimator.best_estimator_.alpha
         score = self.train_score
-        text = f"{self.save_id}, best alpha = {alpha:>6.1f}, score = {score:>9.6f}"
+        text = f"{self.save_id:<48s}| best alpha = {alpha:>6.1f}| score = {score:>9.6f}"
         logger.info(text)
 
 
@@ -364,10 +364,10 @@ class CTestMclrnLGBM(CTestMclrn):
     def display_fitted_estimator(self) -> None:
         best_estimator = self.fitted_estimator.best_estimator_
         score = self.train_score
-        text = f"{self.save_id}, " \
-               f"n_estimator = {best_estimator.n_estimators:>2d}, " \
-               f"max_leaves = {best_estimator.max_leaves:>2d}, " \
-               f"learning_rate = {best_estimator.learning_rate:>4.2f}, " \
+        text = f"{self.save_id:<48s}| " \
+               f"n_estimator = {best_estimator.n_estimators:>2d}| " \
+               f"max_leaves = {best_estimator.max_leaves:>2d}| " \
+               f"learning_rate = {best_estimator.learning_rate:>4.2f}| " \
                f"score = {score:>9.6f}"
         logger.info(text)
 
@@ -387,10 +387,10 @@ class CTestMclrnXGB(CTestMclrn):
     def display_fitted_estimator(self) -> None:
         best_estimator = self.fitted_estimator.best_estimator_
         score = self.train_score
-        text = f"{self.save_id}, " \
-               f"n_estimator = {best_estimator.n_estimators:>2d}, " \
-               f"max_leaves = {best_estimator.max_leaves:>2d}, " \
-               f"learning_rate = {best_estimator.learning_rate:>4.2f}, " \
+        text = f"{self.save_id:<48s}| " \
+               f"n_estimator = {best_estimator.n_estimators:>2d}| " \
+               f"max_leaves = {best_estimator.max_leaves:>2d}| " \
+               f"learning_rate = {best_estimator.learning_rate:>4.2f}| " \
                f"score = {score:>9.6f}"
         logger.info(text)
 
