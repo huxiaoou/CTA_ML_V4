@@ -76,12 +76,12 @@ class CFactorMTM(CFactorsByInstru):
             instru, bgn_date=buffer_bgn_date, stp_date=stp_date,
             values=["trade_date", "ticker_major", "return_c_major"],
         )
-        for win, factor_name in zip(self.cfg.wins, self.cfg.names_ma):
-            major_data[factor_name] = major_data["return_c_major"].rolling(window=win).sum()
-        for win, factor_name in zip(self.cfg.wins[0:6], self.cfg.names_diff):
+        for win, name_vanilla in zip(self.cfg.wins, self.cfg.names_vanilla):
+            major_data[name_vanilla] = major_data["return_c_major"].rolling(window=win).sum()
+        for win, name_diff in zip(self.cfg.wins[0:6], self.cfg.names_diff):
             max_win = max(self.cfg.wins)
             n0, n1 = self.cfg.factor_name(max_win), self.cfg.factor_name(win)
-            major_data[factor_name] = major_data[n0] * np.sqrt(win / max_win) - major_data[n1]
+            major_data[name_diff] = major_data[n0] * np.sqrt(win / max_win) - major_data[n1]
         self.rename_ticker(major_data)
         factor_data = self.get_factor_data(major_data, bgn_date)
         return factor_data
@@ -98,8 +98,9 @@ class CFactorSKEW(CFactorsByInstru):
             instru, bgn_date=buffer_bgn_date, stp_date=stp_date,
             values=["trade_date", "ticker_major", "return_c_major"],
         )
-        for win, factor_name in zip(self.cfg.wins, self.cfg.factor_names):
-            major_data[factor_name] = -major_data["return_c_major"].rolling(window=win).skew()
+        for win, name_vanilla, name_delay in zip(self.cfg.wins, self.cfg.names_vanilla, self.cfg.names_delay):
+            major_data[name_vanilla] = -major_data["return_c_major"].rolling(window=win).skew()
+            major_data[name_delay] = major_data[name_vanilla].shift(1)
         self.rename_ticker(major_data)
         factor_data = self.get_factor_data(major_data, bgn_date)
         return factor_data
@@ -163,8 +164,8 @@ class CFactorBASIS(CFactorsByInstru):
             instru, bgn_date=buffer_bgn_date, stp_date=stp_date,
             values=["trade_date", "ticker_major", x, y],
         )
-        for win, name_ma, name_res in zip(self.cfg.wins, self.cfg.names_ma, self.cfg.names_res):
-            adj_data[name_ma] = adj_data[x].rolling(window=win, min_periods=int(2 * win / 3)).mean()
+        for win, name_vanilla, name_res in zip(self.cfg.wins, self.cfg.names_vanilla, self.cfg.names_res):
+            adj_data[name_vanilla] = adj_data[x].rolling(window=win, min_periods=int(2 * win / 3)).mean()
             beta = cal_rolling_beta(df=adj_data, x=x, y=y, rolling_window=win)
             adj_data[name_res] = adj_data[y] - adj_data[x] * beta
         self.rename_ticker(adj_data)

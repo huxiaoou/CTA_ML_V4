@@ -115,13 +115,23 @@ class CCfgFactorGrp:
 class _CCfgFactorGrpWin(CCfgFactorGrp):
     wins: list[int]
 
-    def factor_name(self, w: int) -> TFactorName:
+    # --- name
+    def name_vanilla(self, w: int) -> TFactorName:
         return TFactorName(f"{self.factor_class}{w:03d}")
+
+    def factor_name(self, w: int) -> TFactorName:
+        return self.name_vanilla(w)
+
+    # --- names
+    @property
+    def names_vanilla(self) -> TFactorNames:
+        return [self.name_vanilla(w) for w in self.wins]
 
     @property
     def factor_names(self) -> TFactorNames:
         return [self.factor_name(w) for w in self.wins]
 
+    # --- other
     def buffer_bgn_date(self, bgn_date: str, calendar: CCalendar, shift: int = -5) -> str:
         return calendar.get_next_date(bgn_date, -max(self.wins) + shift)
 
@@ -137,10 +147,6 @@ class CCfgFactorGrpMTM(_CCfgFactorGrpWin):
     def factor_class(self) -> TFactorClass:
         return TFactorClass.MTM
 
-    @property
-    def names_ma(self) -> TFactorNames:
-        return super().factor_names
-
     def name_diff(self, w: int) -> TFactorName:
         return TFactorName(f"{self.factor_class}D{w:03d}")
 
@@ -150,13 +156,24 @@ class CCfgFactorGrpMTM(_CCfgFactorGrpWin):
 
     @property
     def factor_names(self) -> TFactorNames:
-        return self.names_ma + self.names_diff
+        return self.names_vanilla + self.names_diff
 
 
 class CCfgFactorGrpSKEW(_CCfgFactorGrpWin):
     @property
     def factor_class(self) -> TFactorClass:
         return TFactorClass.SKEW
+
+    def name_delay(self, w: int) -> TFactorName:
+        return TFactorName(f"{self.factor_class}{w:03d}D")
+
+    @property
+    def names_delay(self) -> TFactorNames:
+        return [self.name_delay(w) for w in self.wins]
+
+    @property
+    def factor_names(self) -> TFactorNames:
+        return super().factor_names + self.names_delay
 
 
 class CCfgFactorGrpKURT(_CCfgFactorGrpWin):
@@ -198,20 +215,19 @@ class CCfgFactorGrpRS(_CCfgFactorGrpWin):
 
 class CCfgFactorGrpBASIS(_CCfgFactorGrpWin):
     @property
-    def names_ma(self) -> TFactorNames:
-        return super().factor_names
+    def factor_class(self) -> TFactorClass:
+        return TFactorClass.BASIS
+
+    def name_res(self, w: int) -> TFactorName:
+        return TFactorName(f"{self.factor_class}RES{w:03d}")
 
     @property
     def names_res(self) -> TFactorNames:
-        return [TFactorName(f"{self.factor_class}RES{w:03d}") for w in self.wins]
+        return [self.name_res(w) for w in self.wins]
 
     @property
     def factor_names(self) -> TFactorNames:
-        return self.names_ma + self.names_res
-
-    @property
-    def factor_class(self) -> TFactorClass:
-        return TFactorClass.BASIS
+        return self.names_vanilla + self.names_res
 
 
 @dataclass(frozen=True)
