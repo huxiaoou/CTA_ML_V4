@@ -1,6 +1,7 @@
 import yaml
 from husfort.qsqlite import CDbStruct, CSqlTable
 from typedef import (TUniverse, TInstruName, TReturnClass, TFactorClass, TFactorName,
+                     TFacRetType, TFacUnvrsOpts, CFactor,
                      CCfgInstru, CCfgAvlbUnvrs, CCfgMktIdx, CCfgConst, CTestModel)
 from typedef import CCfgPrd, CCfgSim
 from typedef import CCfgProj, CCfgDbStruct
@@ -16,10 +17,14 @@ with open("config.yaml", "r") as f:
     _config = yaml.safe_load(f)
 
 universe = TUniverse({TInstruName(k): CCfgInstru(**v) for k, v in _config["universe"].items()})
-factors_universe_options = {
-    TReturnClass(k): [(TFactorClass(z[0]), TFactorName(z[1])) for z in v]
-    for k, v in _config["factors_universe_options"].items()
-}
+factors_universe_options: TFacUnvrsOpts = {}
+for fac_ret_type in TFacRetType:
+    for ret_class, opts in _config["factors_universe_options"][fac_ret_type].items():
+        ret_class: TReturnClass
+        opts: list[tuple[str, str]]
+        factors_universe_options[(fac_ret_type, ret_class)] = [
+            CFactor(TFactorClass(z[0]), TFactorName(z[1])) for z in opts
+        ]
 
 proj_cfg = CCfgProj(
     # --- shared data path
