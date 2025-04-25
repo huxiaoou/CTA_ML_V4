@@ -5,8 +5,8 @@ from loguru import logger
 from husfort.qutility import SFG, SFY
 from husfort.qutility import check_and_mkdir
 from solutions.mclrn import CTestMclrn, CTestMclrnLinear, CTestMclrnRidge, CTestMclrnLGBM, CTestMclrnXGB
-from typedef import (CTestData, CTestModel, TRets, CRet, CFactor,
-                     TFacRetType, TModelType, TUniverse, TFactors)
+from typedef import (CTestData, CTestModel, TRets, CRet, TFacUnvrsOpts,
+                     TFacRetType, TModelType, TUniverse)
 
 """
 -------------
@@ -60,7 +60,7 @@ def load_mclrn_tests(mclrn_dir: str, mclrn_tests_config_file: str) -> list[dict[
 
 def parse_config_to_mclrn_test(
         config: dict[str, Any],
-        factors_universe_options: dict[str, TFactors],
+        factors_universe_options: TFacUnvrsOpts,
         universe: TUniverse,
         factors_avlb_raw_dir: str,
         factors_avlb_neu_dir: str,
@@ -69,7 +69,7 @@ def parse_config_to_mclrn_test(
         mclrn_dir: str,
 ):
     test_data, test_model = config["test_data"], config["test_model"]
-    factors = [CFactor(fc, fn) for (fc, fn) in factors_universe_options[test_data["factors"]]]
+    factors = factors_universe_options[(test_data["ret_type"], test_data["factors"])]
     td = CTestData(
         ret=CRet.parse_from_name(test_data["ret"]),
         ret_type=test_data["ret_type"],
@@ -96,7 +96,7 @@ def parse_config_to_mclrn_test(
 
 def parse_configs_to_mclrn_tests(
         config_models: list[dict[str, Any]],
-        factors_universe_options: dict[str, TFactors],
+        factors_universe_options: TFacUnvrsOpts,
         universe: TUniverse,
         factors_avlb_raw_dir: str,
         factors_avlb_neu_dir: str,
@@ -124,7 +124,7 @@ def parse_configs_to_mclrn_tests(
 def gen_tests(
         mclrn_dir: str,
         mclrn_tests_config_file: str,
-        factors_universe_options: dict[str, TFactors],
+        factors_universe_options: TFacUnvrsOpts,
         universe: TUniverse,
         factors_avlb_raw_dir: str,
         factors_avlb_neu_dir: str,

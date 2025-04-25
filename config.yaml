@@ -183,7 +183,7 @@ factors:
   MTM:
     wins: [ 1, 2, 3, 5, 10, 20, 120, 240 ]
   SKEW:
-    wins: [ 10, 20, 60, 120]
+    wins: [ 10, 20, 60, 120 ]
   KURT:
     wins: [ 5, 10, 20 ] #
   RS:
@@ -193,22 +193,28 @@ factors:
 
 # ------- factors universe -------
 factors_universe_options:
-  Opn:
-    - [ MTM, MTMD005 ]
-    - [ SKEW, SKEW010 ]
-    - [ KURT, KURT010 ]
-    - [ RS, RSPA120 ]
-    - [ RS, RSDIF ]
-    - [ BASIS, BASIS120 ]
-    - [ BASIS, BASISRES010 ]
-  Cls:
-    - [ MTM, MTMD005 ]
-    - [ SKEW, SKEW020 ]
-    - [ KURT, KURT010 ]
-    - [ RS, RSPA120 ]
-    - [ RS, RSDIF ]
-    - [ BASIS, BASIS120 ]
-    - [ BASIS, BASISRES010 ]
+  raw:
+    Opn:
+      - [ MTM, MTMD005 ]
+      - [ SKEW, SKEW120 ]
+      - [ BASIS, BASIS120 ]
+      - [ BASIS, BASISRES010 ]
+    Cls:
+      - [ MTM, MTMD005 ]
+      - [ SKEW, SKEW120 ]
+      - [ BASIS, BASIS120 ]
+      - [ BASIS, BASISRES010 ]
+  neu:
+    Opn:
+      - [ MTM, MTMD005 ]
+      - [ SKEW, SKEW020D ]
+      - [ BASIS, BASIS120 ]
+      - [ BASIS, BASISRES010 ]
+    Cls:
+      - [ MTM, MTMD005 ]
+      - [ SKEW, SKEW020D ]
+      - [ BASIS, BASIS120 ]
+      - [ BASIS, BASISRES010 ]
 
 # ------- models -------
 test_models:

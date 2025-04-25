@@ -380,6 +380,9 @@ class CCfgDbStruct:
     minute_bar: CDbStruct
 
 
+TFacUnvrsOpts = dict[tuple[TFacRetType, TReturnClass], TFactors]
+
+
 @dataclass(frozen=True)
 class CCfgProj:
     # --- shared
@@ -405,7 +408,7 @@ class CCfgProj:
     sim: CCfgSim
     factors: dict
     test_models: list[CTestModel]
-    factors_universe_options: dict[TReturnClass, list[tuple[TFactorClass, TFactorName]]]
+    factors_universe_options: TFacUnvrsOpts
 
     @property
     def test_rets_wins(self) -> list[int]:
