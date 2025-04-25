@@ -285,8 +285,14 @@ class CTestMclrn:
         sorted_prediction = prediction.reset_index().sort_values(["trade_date", "instrument"])
         return sorted_prediction
 
-    def process_save_prediction(self, prediction: pd.DataFrame, calendar: CCalendar):
+    def process_save_prediction(
+            self, agent_queue: CAgentQueue, prediction: pd.DataFrame, calendar: CCalendar,
+    ):
+        agent_queue.set_description(f"{self.save_id:<48s} save")
+        agent_queue.set_completed(0)
+        agent_queue.set_total(3)
         db_struct_prdct = gen_prdct_db(self.mclrn_prd_dir, self.save_id, self.test_data.ret.ret_name)
+        agent_queue.set_advance(advance=1)
         check_and_makedirs(db_struct_prdct.db_save_dir)
         sqldb = CMgrSqlDb(
             db_save_dir=db_struct_prdct.db_save_dir,
@@ -294,8 +300,10 @@ class CTestMclrn:
             table=db_struct_prdct.table,
             mode="a",
         )
+        agent_queue.set_advance(advance=1)
         if sqldb.check_continuity(incoming_date=prediction["trade_date"].iloc[0], calendar=calendar) == 0:
             sqldb.update(update_data=prediction)
+            agent_queue.set_advance(advance=1)
         return 0
 
     def main_mclrn_model(
@@ -308,7 +316,7 @@ class CTestMclrn:
         logger.add("mclrn.log")
         self.process_trn(agent_queue, bgn_date, stp_date, calendar, verbose)
         prediction = self.process_prd(agent_queue, bgn_date, stp_date, calendar, verbose)
-        self.process_save_prediction(prediction, calendar)
+        self.process_save_prediction(agent_queue, prediction, calendar)
         agent_queue.set_status(EStatusWorker.FINISHED)
         return 0
 
@@ -358,7 +366,7 @@ class CTestMclrnLGBM(CTestMclrn):
         score = self.train_score
         text = f"{self.save_id}, " \
                f"n_estimator = {best_estimator.n_estimators:>2d}, " \
-               f"num_leaves = {best_estimator.num_leaves:>2d}, " \
+               f"max_leaves = {best_estimator.max_leaves:>2d}, " \
                f"learning_rate = {best_estimator.learning_rate:>4.2f}, " \
                f"score = {score:>9.6f}"
         logger.info(text)
