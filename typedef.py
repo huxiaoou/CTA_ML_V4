@@ -181,6 +181,17 @@ class CCfgFactorGrpKURT(_CCfgFactorGrpWin):
     def factor_class(self) -> TFactorClass:
         return TFactorClass.KURT
 
+    def name_diff(self) -> TFactorName:
+        return TFactorName(f"{self.factor_class}DIF")
+
+    @property
+    def names_diff(self) -> TFactorNames:
+        return [self.name_diff()]
+
+    @property
+    def factor_names(self) -> TFactorNames:
+        return self.names_vanilla + self.names_diff
+
 
 class CCfgFactorGrpRS(_CCfgFactorGrpWin):
     @property

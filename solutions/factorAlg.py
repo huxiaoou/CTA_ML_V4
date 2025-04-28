@@ -117,8 +117,10 @@ class CFactorKURT(CFactorsByInstru):
             instru, bgn_date=buffer_bgn_date, stp_date=stp_date,
             values=["trade_date", "ticker_major", "return_c_major"],
         )
-        for win, factor_name in zip(self.cfg.wins, self.cfg.factor_names):
-            major_data[factor_name] = major_data["return_c_major"].rolling(window=win).kurt()
+        for win, name_vanilla in zip(self.cfg.wins, self.cfg.names_vanilla):
+            major_data[name_vanilla] = major_data["return_c_major"].rolling(window=win).kurt()
+        n0, n1 = self.cfg.name_vanilla(10), self.cfg.name_vanilla(120)
+        major_data[self.cfg.name_diff()] = major_data[n0] - major_data[n1]
         self.rename_ticker(major_data)
         factor_data = self.get_factor_data(major_data, bgn_date)
         return factor_data
@@ -141,11 +143,10 @@ class CFactorRS(CFactorsByInstru):
             ma = adj_data["stock"].rolling(window=win).mean()
             s = adj_data["stock"] / ma.where(ma > 0, np.nan)
             adj_data[rspa] = 1 - s
-
             la = adj_data["stock"].shift(win)
             s = adj_data["stock"] / la.where(la > 0, np.nan)
             adj_data[rsla] = 1 - s
-        n0, n1 = self.cfg.name_rspa(240), self.cfg.name_rspa(60)
+        n0, n1 = self.cfg.name_rspa(240), self.cfg.name_rspa(20)
         adj_data[self.cfg.name_diff()] = adj_data[n0] - adj_data[n1]
         self.rename_ticker(adj_data)
         factor_data = self.get_factor_data(adj_data, bgn_date)
