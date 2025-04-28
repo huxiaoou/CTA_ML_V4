@@ -203,6 +203,7 @@ factors_universe_options:
       - [ RS, RSPA240 ]
       - [ BASIS, BASIS120 ]
       - [ BASIS, BASISRES010 ]
+      - [ TS, TS240 ]
     Cls:
       - [ MTM, MTMD005 ]
       - [ SKEW, SKEW120 ]
@@ -210,6 +211,7 @@ factors_universe_options:
       - [ RS, RSPA240 ]
       - [ BASIS, BASIS120 ]
       - [ BASIS, BASISRES010 ]
+      - [ TS, TS240 ]
   neu:
     Opn:
       - [ MTM, MTMD005 ]
@@ -218,6 +220,7 @@ factors_universe_options:
       - [ RS, RSPA240 ]
       - [ BASIS, BASIS120 ]
       - [ BASIS, BASISRES010 ]
+      - [ TS, TS240 ]
     Cls:
       - [ MTM, MTMD005 ]
       - [ SKEW, SKEW020D ]
@@ -225,6 +228,7 @@ factors_universe_options:
       - [ RS, RSPA240 ]
       - [ BASIS, BASIS120 ]
       - [ BASIS, BASISRES010 ]
+      - [ TS, TS240 ]
 
 # ------- models -------
 test_models:
