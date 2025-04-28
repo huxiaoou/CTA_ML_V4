@@ -333,7 +333,7 @@ class CTestMclrnLinear(CTestMclrn):
 
     def display_fitted_estimator(self) -> None:
         score = self.train_score
-        text = f"{self.save_id:<48s} | score = {score:>9.6f}"
+        text = f"{self.save_id:<48s}| score = {score:>9.6f}"
         logger.info(text)
 
 
