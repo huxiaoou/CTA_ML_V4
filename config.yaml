@@ -197,22 +197,30 @@ factors_universe_options:
     Opn:
       - [ MTM, MTMD005 ]
       - [ SKEW, SKEW120 ]
+      - [ KURT, KURTDIF ]
+      - [ RS, RSPA240 ]
       - [ BASIS, BASIS120 ]
       - [ BASIS, BASISRES010 ]
     Cls:
       - [ MTM, MTMD005 ]
       - [ SKEW, SKEW120 ]
+      - [ KURT, KURTDIF ]
+      - [ RS, RSPA240 ]
       - [ BASIS, BASIS120 ]
       - [ BASIS, BASISRES010 ]
   neu:
     Opn:
       - [ MTM, MTMD005 ]
       - [ SKEW, SKEW020D ]
+      - [ KURT, KURTDIF ]
+      - [ RS, RSPA240 ]
       - [ BASIS, BASIS120 ]
       - [ BASIS, BASISRES010 ]
     Cls:
       - [ MTM, MTMD005 ]
       - [ SKEW, SKEW020D ]
+      - [ KURT, KURTDIF ]
+      - [ RS, RSPA240 ]
       - [ BASIS, BASIS120 ]
       - [ BASIS, BASISRES010 ]
 
