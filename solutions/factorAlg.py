@@ -208,7 +208,7 @@ class CFactorTS(CFactorsByInstru):
         for win, name_vanilla, name_res in zip(self.cfg.wins, self.cfg.names_vanilla, self.cfg.names_res):
             adj_data[name_vanilla] = adj_data["ts"].rolling(window=win, min_periods=int(2 * win / 3)).mean()
             beta = cal_rolling_beta(df=adj_data, x=x, y=y, rolling_window=win)
-            adj_data[name_res] = -(adj_data[y] - adj_data[x] * beta)
+            adj_data[name_res] = adj_data[y] - adj_data[x] * beta
         self.rename_ticker(adj_data)
         factor_data = self.get_factor_data(adj_data, bgn_date)
         return factor_data
