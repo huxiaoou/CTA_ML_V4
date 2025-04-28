@@ -5,7 +5,7 @@ from husfort.qsqlite import CDbStruct
 from typedef import (
     TFactorClass, CCfgFactors, TUniverse, CCfgFactorGrp,
     CCfgFactorGrpMTM, CCfgFactorGrpSKEW, CCfgFactorGrpKURT,
-    CCfgFactorGrpRS, CCfgFactorGrpBASIS,
+    CCfgFactorGrpRS, CCfgFactorGrpBASIS, CCfgFactorGrpTS,
 )
 from solutions.factor import CFactorsByInstru
 
@@ -174,6 +174,46 @@ class CFactorBASIS(CFactorsByInstru):
         return factor_data
 
 
+class CFactorTS(CFactorsByInstru):
+    def __init__(self, cfg: CCfgFactorGrpTS, **kwargs):
+        self.cfg = cfg
+        super().__init__(factor_grp=cfg, **kwargs)
+
+    @staticmethod
+    def cal_roll_return(x: pd.Series, ticker_n: str, ticker_d: str, prc_n: str, prc_d: str):
+        if x[ticker_n] == "" or x[ticker_d] == "":
+            return np.nan
+        if x[prc_d] > 0:
+            cntrct_d, cntrct_n = x[ticker_d].split(".")[0], x[ticker_n].split(".")[0]
+            month_d, month_n = int(cntrct_d[-2:]), int(cntrct_n[-2:])
+            dlt_month = month_d - month_n
+            dlt_month = dlt_month + (12 if dlt_month <= 0 else 0)
+            return (x[prc_n] / x[prc_d] - 1) / dlt_month * 12 * 100
+        else:
+            return np.nan
+
+    def cal_factor_by_instru(self, instru: str, bgn_date: str, stp_date: str, calendar: CCalendar) -> pd.DataFrame:
+        buffer_bgn_date = calendar.get_start_date(bgn_date, max(self.cfg.wins), -5)
+        adj_data = self.load_preprocess(
+            instru, bgn_date=buffer_bgn_date, stp_date=stp_date,
+            values=["trade_date", "ticker_major", "ticker_minor", "close_major", "close_minor", "return_c_major"],
+        )
+        adj_data[["ticker_major", "ticker_minor"]] = adj_data[["ticker_major", "ticker_minor"]].fillna("")
+        adj_data["ts"] = adj_data.apply(
+            self.cal_roll_return,
+            args=("ticker_major", "ticker_minor", "close_major", "close_minor"),
+            axis=1,
+        )
+        x, y = "ts", "return_c_major"
+        for win, name_vanilla, name_res in zip(self.cfg.wins, self.cfg.names_vanilla, self.cfg.names_res):
+            adj_data[name_vanilla] = adj_data["ts"].rolling(window=win, min_periods=int(2 * win / 3)).mean()
+            beta = cal_rolling_beta(df=adj_data, x=x, y=y, rolling_window=win)
+            adj_data[name_res] = -(adj_data[y] - adj_data[x] * beta)
+        self.rename_ticker(adj_data)
+        factor_data = self.get_factor_data(adj_data, bgn_date)
+        return factor_data
+
+
 """
 ---------------------------------------------------
 Part III: pick factor
@@ -223,6 +263,14 @@ def pick_factor(
     elif fclass == TFactorClass.BASIS:
         cfg = cfg_factors.BASIS
         fac = CFactorBASIS(
+            cfg=cfg,
+            factors_by_instru_dir=factors_by_instru_dir,
+            universe=universe,
+            db_struct_preprocess=preprocess,
+        )
+    elif fclass == TFactorClass.TS:
+        cfg = cfg_factors.TS
+        fac = CFactorTS(
             cfg=cfg,
             factors_by_instru_dir=factors_by_instru_dir,
             universe=universe,

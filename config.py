@@ -8,7 +8,7 @@ from typedef import CCfgProj, CCfgDbStruct
 from typedef import (
     CCfgFactors,
     CCfgFactorGrpMTM, CCfgFactorGrpSKEW, CCfgFactorGrpKURT,
-    CCfgFactorGrpRS, CCfgFactorGrpBASIS,
+    CCfgFactorGrpRS, CCfgFactorGrpBASIS, CCfgFactorGrpTS,
 )
 
 # ---------- project configuration ----------
@@ -107,6 +107,7 @@ cfg_factors = CCfgFactors(
     KURT=CCfgFactorGrpKURT(**proj_cfg.factors["KURT"]),
     RS=CCfgFactorGrpRS(**proj_cfg.factors["RS"]),
     BASIS=CCfgFactorGrpBASIS(**proj_cfg.factors["BASIS"]),
+    TS=CCfgFactorGrpTS(**proj_cfg.factors["TS"]),
 )
 
 if __name__ == "__main__":

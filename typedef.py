@@ -74,6 +74,7 @@ class TFactorClass(StrEnum):
     KURT = "KURT"
     RS = "RS"
     BASIS = "BASIS"
+    TS = "TS"
 
 
 TFactorName = NewType("TFactorName", str)
@@ -241,6 +242,23 @@ class CCfgFactorGrpBASIS(_CCfgFactorGrpWin):
         return self.names_vanilla + self.names_res
 
 
+class CCfgFactorGrpTS(_CCfgFactorGrpWin):
+    @property
+    def factor_class(self) -> TFactorClass:
+        return TFactorClass.TS
+
+    def name_res(self, w: int) -> TFactorName:
+        return TFactorName(f"{self.factor_class}RES{w:03d}")
+
+    @property
+    def names_res(self) -> TFactorNames:
+        return [self.name_res(w) for w in self.wins]
+
+    @property
+    def factor_names(self) -> TFactorNames:
+        return self.names_vanilla + self.names_res
+
+
 @dataclass(frozen=True)
 class CCfgFactors:
     MTM: CCfgFactorGrpMTM
@@ -248,6 +266,7 @@ class CCfgFactors:
     KURT: CCfgFactorGrpKURT
     RS: CCfgFactorGrpRS
     BASIS: CCfgFactorGrpBASIS
+    TS: CCfgFactorGrpTS
 
     @property
     def classes(self) -> list[str]:

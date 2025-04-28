@@ -190,6 +190,8 @@ factors:
     wins: [ 20, 60, 120, 240 ]
   BASIS:
     wins: [ 10, 20, 60, 120, 240 ]
+  TS:
+    wins: [ 10, 20, 60, 120, 240 ]
 
 # ------- factors universe -------
 factors_universe_options:

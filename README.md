@@ -75,3 +75,7 @@ factorAlg.py
 + from typedef import CCfgFactorGrpNewFactor
 + new class CFactorNewFactor
 + update pick_factor
+
+run_all.ps1
++ factor
++ ic
