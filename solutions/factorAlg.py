@@ -6,6 +6,7 @@ from typedef import (
     TFactorClass, CCfgFactors, TUniverse, CCfgFactorGrp,
     CCfgFactorGrpMTM, CCfgFactorGrpSKEW, CCfgFactorGrpKURT,
     CCfgFactorGrpRS, CCfgFactorGrpBASIS, CCfgFactorGrpTS,
+    CCfgFactorGrpLIQUIDITY,
 )
 from solutions.factor import CFactorsByInstru
 
@@ -193,7 +194,7 @@ class CFactorTS(CFactorsByInstru):
             return np.nan
 
     def cal_factor_by_instru(self, instru: str, bgn_date: str, stp_date: str, calendar: CCalendar) -> pd.DataFrame:
-        buffer_bgn_date = calendar.get_start_date(bgn_date, max(self.cfg.wins), -5)
+        buffer_bgn_date = self.cfg.buffer_bgn_date(bgn_date, calendar)
         adj_data = self.load_preprocess(
             instru, bgn_date=buffer_bgn_date, stp_date=stp_date,
             values=["trade_date", "ticker_major", "ticker_minor", "close_major", "close_minor", "return_c_major"],
@@ -211,6 +212,28 @@ class CFactorTS(CFactorsByInstru):
             adj_data[name_res] = adj_data[y] - adj_data[x] * beta
         self.rename_ticker(adj_data)
         factor_data = self.get_factor_data(adj_data, bgn_date)
+        return factor_data
+
+
+class CFactorLIQUIDITY(CFactorsByInstru):
+    def __init__(self, cfg: CCfgFactorGrpLIQUIDITY, **kwargs):
+        self.cfg = cfg
+        super().__init__(factor_grp=cfg, **kwargs)
+
+    def cal_factor_by_instru(self, instru: str, bgn_date: str, stp_date: str, calendar: CCalendar) -> pd.DataFrame:
+        buffer_bgn_date = self.cfg.buffer_bgn_date(bgn_date, calendar)
+        major_data = self.load_preprocess(
+            instru, bgn_date=buffer_bgn_date, stp_date=stp_date,
+            values=["trade_date", "ticker_major", "return_c_major", "amount_major"],
+        )
+        liquidity_id = "liquidity"
+        major_data[liquidity_id] = major_data["return_c_major"] * 1e10 / major_data["amount_major"]
+        for win, name_vanilla in zip(self.cfg.wins, self.cfg.names_vanilla):
+            major_data[name_vanilla] = major_data[liquidity_id].rolling(window=win, min_periods=int(win * 0.3)).mean()
+        n0, n1 = self.cfg.name_vanilla(240), self.cfg.name_vanilla(60)
+        major_data[self.cfg.name_diff()] = major_data[n0] - major_data[n1]
+        self.rename_ticker(major_data)
+        factor_data = self.get_factor_data(major_data, bgn_date)
         return factor_data
 
 
@@ -271,6 +294,14 @@ def pick_factor(
     elif fclass == TFactorClass.TS:
         cfg = cfg_factors.TS
         fac = CFactorTS(
+            cfg=cfg,
+            factors_by_instru_dir=factors_by_instru_dir,
+            universe=universe,
+            db_struct_preprocess=preprocess,
+        )
+    elif fclass == TFactorClass.LIQUIDITY:
+        cfg = cfg_factors.LIQUIDITY
+        fac = CFactorLIQUIDITY(
             cfg=cfg,
             factors_by_instru_dir=factors_by_instru_dir,
             universe=universe,
