@@ -207,6 +207,7 @@ factors_universe_options:
       - [ BASIS, BASIS120 ]
       - [ BASIS, BASISRES010 ]
       - [ TS, TS240 ]
+      - [ LIQUIDITY, LIQUIDITY240 ]
     Cls:
       - [ MTM, MTMD005 ]
       - [ SKEW, SKEW120 ]
@@ -215,6 +216,7 @@ factors_universe_options:
       - [ BASIS, BASIS120 ]
       - [ BASIS, BASISRES010 ]
       - [ TS, TS240 ]
+      - [ LIQUIDITY, LIQUIDITY240 ]
   neu:
     Opn:
       - [ MTM, MTMD005 ]
@@ -224,6 +226,7 @@ factors_universe_options:
       - [ BASIS, BASIS120 ]
       - [ BASIS, BASISRES010 ]
       - [ TS, TS240 ]
+      - [ LIQUIDITY, LIQUIDITY240 ]
     Cls:
       - [ MTM, MTMD005 ]
       - [ SKEW, SKEW020D ]
@@ -232,24 +235,25 @@ factors_universe_options:
       - [ BASIS, BASIS120 ]
       - [ BASIS, BASISRES010 ]
       - [ TS, TS240 ]
+      - [ LIQUIDITY, LIQUIDITY240 ]
 
 # ------- models -------
 test_models:
   - model_type: LINEAR
-    trn_win: 30
+    trn_win: 240
     using_instru: false
     classification: false
     cv: 0
     hyper_param_grids:
   - model_type: RIDGE
-    trn_win: 30
+    trn_win: 240
     using_instru: false
     classification: false
     cv: 5
     hyper_param_grids:
       alpha: [ 0.01, 1, 10 ]
   - model_type: LGBM
-    trn_win: 30
+    trn_win: 240
     using_instru: true
     classification: true
     cv: 5
@@ -261,7 +265,7 @@ test_models:
       learning_rate: [ 0.01, 0.05, 0.1 ]
       metric: [ "binary_logloss" ] # ["l1", "l2"] for regressor, ["binary_logloss"] for classifier
   - model_type: XGB
-    trn_win: 30
+    trn_win: 240
     using_instru: true
     classification: true
     cv: 5
