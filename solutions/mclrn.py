@@ -136,6 +136,14 @@ class CTestMclrn:
     def display_fitted_estimator(self) -> None:
         pass
 
+    def get_fit_params(self, test_x: pd.DataFrame, test_y: pd.Series) -> dict:
+        if self.test_model.early_stopping > 0:
+            return {
+                "eval_set": [[test_x, test_y]]
+            }
+        else:
+            return {}
+
     def fit_estimator(self, x_data: pd.DataFrame, y_data: pd.Series):
         if self.test_model.using_instru:
             x, y = x_data.reset_index(level="instrument"), y_data
@@ -147,15 +155,16 @@ class CTestMclrn:
             y = y.mask(y >= 0, other=1)
             y = y.mask(y < 0, other=0)
 
+        fit_params = self.get_fit_params(x, y)
         if self.test_model.cv > 0:
             grid_cv_seeker = GridSearchCV(
                 self.prototype,
                 self.test_model.hyper_param_grids,
                 cv=self.test_model.cv,
             )
-            self.fitted_estimator = grid_cv_seeker.fit(x, y)
+            self.fitted_estimator = grid_cv_seeker.fit(x, y, **fit_params)
         else:
-            self.fitted_estimator = self.prototype.fit(x, y)
+            self.fitted_estimator = self.prototype.fit(x, y, **fit_params)
         self.train_score = self.fitted_estimator.score(x, y)
         return 0
 
@@ -352,10 +361,14 @@ class CTestMclrnRidge(CTestMclrn):
 class CTestMclrnLGBM(CTestMclrn):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        if self.test_model.early_stopping <= 0:
+            raise ValueError(f"test_model.early_stopping must be > 0 for {self.__class__.__name__}")
+
         # self.prototype = lgb.LGBMRegressor(
         self.prototype = lgb.LGBMClassifier(
             # other fixed parameters
             # force_row_wise=True,  # cpu device only
+            early_stopping_rounds=self.test_model.early_stopping,
             verbose=-1,
             random_state=self.RANDOM_STATE,
             # device_type="gpu", # for small data cpu is much faster
@@ -375,20 +388,31 @@ class CTestMclrnLGBM(CTestMclrn):
 class CTestMclrnXGB(CTestMclrn):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        if self.test_model.early_stopping <= 0:
+            raise ValueError(f"test_model.early_stopping must be > 0 for {self.__class__.__name__}")
+
         # self.prototype = xgb.XGBRegressor(
         self.prototype = xgb.XGBClassifier(
             # other fixed parameters
+            early_stopping_rounds=self.test_model.early_stopping,
             verbosity=0,
             random_state=self.RANDOM_STATE,
             enable_categorical=True,
             # device="cuda",  # cpu maybe faster for data not in large scale.
         )
 
+    def get_fit_params(self, test_x: pd.DataFrame, test_y: pd.Series) -> dict:
+        return {
+            "eval_set": [[test_x, test_y]],
+            "verbose": False,
+        }
+
     def display_fitted_estimator(self) -> None:
         best_estimator = self.fitted_estimator.best_estimator_
         score = self.train_score
         text = f"{self.save_id:<48s}| " \
                f"n_estimator = {best_estimator.n_estimators:>2d} | " \
+               f"n_iteration = {best_estimator.best_iteration:>2d} | " \
                f"max_leaves = {best_estimator.max_leaves:>2d} | " \
                f"learning_rate = {best_estimator.learning_rate:>4.2f} | " \
                f"score = {score:>9.6f}"

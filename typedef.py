@@ -335,12 +335,13 @@ class CTestModel:
     using_instru: bool = False
     classification: bool = False
     cv: int = 0
+    early_stopping: int = 0
     hyper_param_grids: dict | dict[str, list] = None  # must be provided if cv > 0
 
     @property
     def save_id(self) -> str:
         ui = "UI" if self.using_instru else "NI"
-        return f"{self.model_type}-W{self.trn_win:03d}-CV{self.cv:02d}-{ui}"
+        return f"{self.model_type}-W{self.trn_win:03d}-CV{self.cv:02d}-ES{self.early_stopping:02d}-{ui}"
 
     def to_dict(self) -> dict:
         return {
@@ -349,6 +350,7 @@ class CTestModel:
             "using_instru": self.using_instru,
             "classification": self.classification,
             "cv": self.cv,
+            "early_stopping": self.early_stopping,
             "hyper_param_grids": self.hyper_param_grids,
         }
 
