@@ -389,6 +389,7 @@ class CTestMclrnLGBM(CTestMclrn):
                f"n_estimator = {best_estimator.n_estimators:>2d} | " \
                f"n_iteration = {best_estimator.best_iteration_:>2d} | " \
                f"max_leaves = {best_estimator.max_leaves:>2d} | " \
+               f"max_depth = {best_estimator.max_depth:>2d} | " \
                f"learning_rate = {best_estimator.learning_rate:>4.2f} | " \
                f"score = {score:>9.6f}"
         logger.info(text)
@@ -423,6 +424,7 @@ class CTestMclrnXGB(CTestMclrn):
                f"n_estimator = {best_estimator.n_estimators:>2d} | " \
                f"n_iteration = {best_estimator.best_iteration:>2d} | " \
                f"max_leaves = {best_estimator.max_leaves:>2d} | " \
+               f"max_depth = {best_estimator.max_depth:>2d} | " \
                f"learning_rate = {best_estimator.learning_rate:>4.2f} | " \
                f"score = {score:>9.6f}"
         logger.info(text)
