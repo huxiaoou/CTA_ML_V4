@@ -368,17 +368,26 @@ class CTestMclrnLGBM(CTestMclrn):
         self.prototype = lgb.LGBMClassifier(
             # other fixed parameters
             # force_row_wise=True,  # cpu device only
-            early_stopping_rounds=self.test_model.early_stopping,
             verbose=-1,
             random_state=self.RANDOM_STATE,
             # device_type="gpu", # for small data cpu is much faster
         )
+
+    def get_fit_params(self, test_x: pd.DataFrame, test_y: pd.Series) -> dict:
+        return {
+            "eval_set": [[test_x, test_y]],
+            "callbacks": [lgb.early_stopping(
+                stopping_rounds=self.test_model.early_stopping,
+                verbose=False,
+            )],
+        }
 
     def display_fitted_estimator(self) -> None:
         best_estimator = self.fitted_estimator.best_estimator_
         score = self.train_score
         text = f"{self.save_id:<48s}| " \
                f"n_estimator = {best_estimator.n_estimators:>2d} | " \
+               f"n_iteration = {best_estimator.best_iteration_:>2d} | " \
                f"max_leaves = {best_estimator.max_leaves:>2d} | " \
                f"learning_rate = {best_estimator.learning_rate:>4.2f} | " \
                f"score = {score:>9.6f}"

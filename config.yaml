@@ -254,32 +254,32 @@ test_models:
   #    early_stopping: 0
   #    hyper_param_grids:
   #      alpha: [ 0.01, 1, 10 ]
-  #  - model_type: LGBM
-  #    trn_win: 60
-  #    using_instru: true
-  #    classification: true
-  #    cv: 5
-  #    early_stopping: 2
-  #    hyper_param_grids:
-  #      boosting_type: [ "gbdt" ]
-  #      n_estimators: [ 3, 5, 8 ]
-  #      max_depth: [ 0 ]
-  #      max_leaves: [ 3, 7, 15 ]
-  #      learning_rate: [ 0.01, 0.05, 0.1 ]
-  #      metric: [ "binary_logloss" ] # ["l1", "l2"] for regressor, ["binary_logloss"] for classifier
-  - model_type: XGB
+  - model_type: LGBM
     trn_win: 60
     using_instru: true
     classification: true
     cv: 5
     early_stopping: 2
     hyper_param_grids:
-      booster: [ "gbtree" ] # ["gbtree", "gblinear", "dart"]
+      boosting_type: [ "gbdt" ]
       n_estimators: [ 3, 5, 8 ]
       max_depth: [ 0 ]
       max_leaves: [ 3, 7, 15 ]
       learning_rate: [ 0.01, 0.05, 0.1 ]
-      objective: [ "binary:logistic" ] # ["reg:squarederror", "reg:absoluteerror", "binary:logistic"]
+      metric: [ "binary_logloss" ] # ["l1", "l2"] for regressor, ["binary_logloss"] for classifier
+  #  - model_type: XGB
+  #    trn_win: 60
+  #    using_instru: true
+  #    classification: true
+  #    cv: 5
+  #    early_stopping: 2
+  #    hyper_param_grids:
+  #      booster: [ "gbtree" ] # ["gbtree", "gblinear", "dart"]
+  #      n_estimators: [ 3, 5, 8 ]
+  #      max_depth: [ 0 ]
+  #      max_leaves: [ 3, 7, 15 ]
+  #      learning_rate: [ 0.01, 0.05, 0.1 ]
+  #      objective: [ "binary:logistic" ] # ["reg:squarederror", "reg:absoluteerror", "binary:logistic"]
 CONST:
   INIT_CASH: 100_000_000
   COST_RATE: 0.0003
