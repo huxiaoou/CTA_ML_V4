@@ -79,10 +79,9 @@ class CFactorMTM(CFactorsByInstru):
         )
         for win, name_vanilla in zip(self.cfg.wins, self.cfg.names_vanilla):
             major_data[name_vanilla] = major_data["return_c_major"].rolling(window=win).sum()
-        for win, name_diff in zip(self.cfg.wins[0:6], self.cfg.names_diff):
-            max_win = max(self.cfg.wins)
-            n0, n1 = self.cfg.factor_name(max_win), self.cfg.factor_name(win)
-            major_data[name_diff] = major_data[n0] * np.sqrt(win / max_win) - major_data[n1]
+        w0, w1 = 240, 5
+        n0, n1 = self.cfg.name_vanilla(w0), self.cfg.name_vanilla(w1)
+        major_data[self.cfg.name_diff()] = major_data[n0] * np.sqrt(w1 / w0) - major_data[n1]
         self.rename_ticker(major_data)
         factor_data = self.get_factor_data(major_data, bgn_date)
         return factor_data

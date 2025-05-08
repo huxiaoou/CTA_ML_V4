@@ -138,6 +138,30 @@ class _CCfgFactorGrpWin(CCfgFactorGrp):
     def buffer_bgn_date(self, bgn_date: str, calendar: CCalendar, shift: int = -5) -> str:
         return calendar.get_next_date(bgn_date, -max(self.wins) + shift)
 
+    # --- extra: Delay
+    def name_delay(self, w: int) -> TFactorName:
+        return TFactorName(f"{self.factor_class}{w:03d}D")
+
+    @property
+    def names_delay(self) -> TFactorNames:
+        return [self.name_delay(w) for w in self.wins]
+
+    # --- extra: Diff
+    def name_diff(self) -> TFactorName:
+        return TFactorName(f"{self.factor_class}DIF")
+
+    @property
+    def names_diff(self) -> TFactorNames:
+        return [self.name_diff()]
+
+    # --- extra: Res
+    def name_res(self, w: int) -> TFactorName:
+        return TFactorName(f"{self.factor_class}RES{w:03d}")
+
+    @property
+    def names_res(self) -> TFactorNames:
+        return [self.name_res(w) for w in self.wins]
+
 
 """
 --- CfgFactorGrp for factors    ---
@@ -150,13 +174,6 @@ class CCfgFactorGrpMTM(_CCfgFactorGrpWin):
     def factor_class(self) -> TFactorClass:
         return TFactorClass.MTM
 
-    def name_diff(self, w: int) -> TFactorName:
-        return TFactorName(f"{self.factor_class}D{w:03d}")
-
-    @property
-    def names_diff(self) -> TFactorNames:
-        return [self.name_diff(w) for w in self.wins[0:6]]
-
     @property
     def factor_names(self) -> TFactorNames:
         return self.names_vanilla + self.names_diff
@@ -167,13 +184,6 @@ class CCfgFactorGrpSKEW(_CCfgFactorGrpWin):
     def factor_class(self) -> TFactorClass:
         return TFactorClass.SKEW
 
-    def name_delay(self, w: int) -> TFactorName:
-        return TFactorName(f"{self.factor_class}{w:03d}D")
-
-    @property
-    def names_delay(self) -> TFactorNames:
-        return [self.name_delay(w) for w in self.wins]
-
     @property
     def factor_names(self) -> TFactorNames:
         return super().factor_names + self.names_delay
@@ -183,13 +193,6 @@ class CCfgFactorGrpKURT(_CCfgFactorGrpWin):
     @property
     def factor_class(self) -> TFactorClass:
         return TFactorClass.KURT
-
-    def name_diff(self) -> TFactorName:
-        return TFactorName(f"{self.factor_class}DIF")
-
-    @property
-    def names_diff(self) -> TFactorNames:
-        return [self.name_diff()]
 
     @property
     def factor_names(self) -> TFactorNames:
@@ -207,9 +210,6 @@ class CCfgFactorGrpRS(_CCfgFactorGrpWin):
     def name_rsla(self, w: int) -> TFactorName:
         return TFactorName(f"{self.factor_class}LA{w:03d}")
 
-    def name_diff(self) -> TFactorName:
-        return TFactorName(f"{self.factor_class}DIF")
-
     @property
     def names_rspa(self) -> TFactorNames:
         return [self.name_rspa(w) for w in self.wins]
@@ -217,10 +217,6 @@ class CCfgFactorGrpRS(_CCfgFactorGrpWin):
     @property
     def names_rsla(self) -> TFactorNames:
         return [self.name_rsla(w) for w in self.wins]
-
-    @property
-    def names_diff(self) -> TFactorNames:
-        return [self.name_diff()]
 
     @property
     def factor_names(self) -> TFactorNames:
@@ -232,13 +228,6 @@ class CCfgFactorGrpBASIS(_CCfgFactorGrpWin):
     def factor_class(self) -> TFactorClass:
         return TFactorClass.BASIS
 
-    def name_res(self, w: int) -> TFactorName:
-        return TFactorName(f"{self.factor_class}RES{w:03d}")
-
-    @property
-    def names_res(self) -> TFactorNames:
-        return [self.name_res(w) for w in self.wins]
-
     @property
     def factor_names(self) -> TFactorNames:
         return self.names_vanilla + self.names_res
@@ -248,13 +237,6 @@ class CCfgFactorGrpTS(_CCfgFactorGrpWin):
     @property
     def factor_class(self) -> TFactorClass:
         return TFactorClass.TS
-
-    def name_res(self, w: int) -> TFactorName:
-        return TFactorName(f"{self.factor_class}RES{w:03d}")
-
-    @property
-    def names_res(self) -> TFactorNames:
-        return [self.name_res(w) for w in self.wins]
 
     @property
     def factor_names(self) -> TFactorNames:
@@ -266,13 +248,6 @@ class CCfgFactorGrpLIQUIDITY(_CCfgFactorGrpWin):
     def factor_class(self) -> TFactorClass:
         return TFactorClass.LIQUIDITY
 
-    def name_diff(self) -> TFactorName:
-        return TFactorName(f"{self.factor_class}DIF")
-
-    @property
-    def names_diff(self) -> TFactorNames:
-        return [self.name_diff()]
-
     @property
     def factor_names(self) -> TFactorNames:
         return self.names_vanilla + self.names_diff
@@ -282,13 +257,6 @@ class CCfgFactorGrpSIZE(_CCfgFactorGrpWin):
     @property
     def factor_class(self) -> TFactorClass:
         return TFactorClass.SIZE
-
-    def name_diff(self) -> TFactorName:
-        return TFactorName(f"{self.factor_class}DIF")
-
-    @property
-    def names_diff(self) -> TFactorNames:
-        return [self.name_diff()]
 
     @property
     def factor_names(self) -> TFactorNames:
