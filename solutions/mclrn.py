@@ -353,7 +353,7 @@ class CTestMclrnLinear(CTestMclrn):
         self.prototype = LinearRegression(fit_intercept=False)
 
     def display_fitted_estimator(self) -> None:
-        text = f"{self.save_id:<48s}| score = [{self.trn_score:>7.4f}]/[{self.val_score:>7.4f}]"
+        text = f"{self.save_id:<52s}| score = [{self.trn_score:>7.4f}]/[{self.val_score:>7.4f}]"
         logger.info(text)
 
 
@@ -364,7 +364,7 @@ class CTestMclrnRidge(CTestMclrn):
 
     def display_fitted_estimator(self) -> None:
         alpha = self.fitted_estimator.best_estimator_.alpha
-        text = f"{self.save_id:<48s}| " \
+        text = f"{self.save_id:<52s}| " \
                f"alpha = {alpha:>5.2f} | " \
                f"score = [{self.trn_score:>7.4f}]/[{self.val_score:>7.4f}]"
         logger.info(text)
@@ -380,7 +380,7 @@ class CTestMclrnLogistic(CTestMclrn):
 
     def display_fitted_estimator(self) -> None:
         c = self.fitted_estimator.best_estimator_.C
-        text = f"{self.save_id:<48s}| " \
+        text = f"{self.save_id:<52s}| " \
                f"C = {c:>5.2f} | " \
                f"score = [{self.trn_score:>7.4f}]/[{self.val_score:>7.4f}]"
         logger.info(text)
@@ -404,7 +404,7 @@ class CTestMclrnLGBM(CTestMclrn):
 
     def display_fitted_estimator(self) -> None:
         best_estimator = self.fitted_estimator.best_estimator_
-        text = f"{self.save_id:<48s}| " \
+        text = f"{self.save_id:<52s}| " \
                f"n_estimator = {best_estimator.best_iteration_:>3d}/{best_estimator.n_estimators:>3d} | " \
                f"leaves = {best_estimator.max_leaves:>2d} | " \
                f"depth = {best_estimator.max_depth:>2d} | " \
@@ -436,7 +436,7 @@ class CTestMclrnXGB(CTestMclrn):
 
     def display_fitted_estimator(self) -> None:
         best_estimator = self.fitted_estimator.best_estimator_
-        text = f"{self.save_id:<48s}| " \
+        text = f"{self.save_id:<52s}| " \
                f"n_estimator = {best_estimator.best_iteration:>3d}/{best_estimator.n_estimators:>3d} | " \
                f"leaves = {best_estimator.max_leaves:>2d} | " \
                f"depth = {best_estimator.max_depth:>2d} | " \
