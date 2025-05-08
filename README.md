@@ -79,3 +79,22 @@ factorAlg.py
 run_all.ps1
 + factor
 + ic
+
+## Steps to add new models
+
+config.yaml
+
++ update test_models
+
+typedef.py
+
++ update TModelType
+
+mclrn.py
+
++ update import
++ give model definition
+
+mclrn_parser.py
+
++ update import

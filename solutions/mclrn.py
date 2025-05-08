@@ -5,7 +5,7 @@ import skops.io as sio
 from dataclasses import dataclass
 from loguru import logger
 from sklearn.model_selection import GridSearchCV, train_test_split
-from sklearn.linear_model import LinearRegression, Ridge
+from sklearn.linear_model import LinearRegression, Ridge, LogisticRegression
 import lightgbm as lgb
 import xgboost as xgb
 from husfort.qcalendar import CCalendar
@@ -15,7 +15,7 @@ from husfort.qmultiprocessing import TTask, mul_process_for_tasks, uni_process_f
 from solutions.shared import gen_factors_avlb_db, gen_test_returns_avlb_db, gen_prdct_db
 from typedef import (
     TReturnName, TFactorNames, CFactor,
-    CTestData, CTestModel, TModelType,
+    CTestData, CTestModel,
 )
 
 """
@@ -366,6 +366,22 @@ class CTestMclrnRidge(CTestMclrn):
         alpha = self.fitted_estimator.best_estimator_.alpha
         text = f"{self.save_id:<48s}| " \
                f"alpha = {alpha:>6.1f} | " \
+               f"score = [{self.trn_score:>7.4f}]/[{self.val_score:>7.4f}]"
+        logger.info(text)
+
+
+class CTestMclrnLogistic(CTestMclrn):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.prototype = LogisticRegression(
+            fit_intercept=False,
+            random_state=self.RANDOM_STATE,
+        )
+
+    def display_fitted_estimator(self) -> None:
+        c = self.fitted_estimator.best_estimator_.C
+        text = f"{self.save_id:<48s}| " \
+               f"C = {c:>6.1f} | " \
                f"score = [{self.trn_score:>7.4f}]/[{self.val_score:>7.4f}]"
         logger.info(text)
 

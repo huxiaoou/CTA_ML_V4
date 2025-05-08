@@ -324,6 +324,7 @@ Part V: models
 class TModelType(StrEnum):
     LINEAR = "LINEAR"
     RIDGE = "RIDGE"
+    LOGISTIC = "LOGISTIC"
     LGBM = "LGBM"
     XGB = "XGB"
 
