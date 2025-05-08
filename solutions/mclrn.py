@@ -365,7 +365,7 @@ class CTestMclrnRidge(CTestMclrn):
     def display_fitted_estimator(self) -> None:
         alpha = self.fitted_estimator.best_estimator_.alpha
         text = f"{self.save_id:<48s}| " \
-               f"alpha = {alpha:>6.1f} | " \
+               f"alpha = {alpha:>5.2f} | " \
                f"score = [{self.trn_score:>7.4f}]/[{self.val_score:>7.4f}]"
         logger.info(text)
 
@@ -381,7 +381,7 @@ class CTestMclrnLogistic(CTestMclrn):
     def display_fitted_estimator(self) -> None:
         c = self.fitted_estimator.best_estimator_.C
         text = f"{self.save_id:<48s}| " \
-               f"C = {c:>6.1f} | " \
+               f"C = {c:>5.2f} | " \
                f"score = [{self.trn_score:>7.4f}]/[{self.val_score:>7.4f}]"
         logger.info(text)
 
