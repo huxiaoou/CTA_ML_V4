@@ -68,6 +68,7 @@ typedef.py
 
 config.py
 
++ update import
 + update cfg_factors
 
 factorAlg.py

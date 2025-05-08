@@ -2,13 +2,14 @@ import yaml
 from husfort.qsqlite import CDbStruct, CSqlTable
 from typedef import (TUniverse, TInstruName, TReturnClass, TFactorClass, TFactorName,
                      TFacRetType, TFacUnvrsOpts, CFactor,
-                     CCfgInstru, CCfgAvlbUnvrs, CCfgMktIdx, CCfgConst, CTestModel, CCfgFactorGrpLIQUIDITY)
+                     CCfgInstru, CCfgAvlbUnvrs, CCfgMktIdx, CCfgConst, CTestModel)
 from typedef import CCfgPrd, CCfgSim
 from typedef import CCfgProj, CCfgDbStruct
 from typedef import (
     CCfgFactors,
     CCfgFactorGrpMTM, CCfgFactorGrpSKEW, CCfgFactorGrpKURT,
     CCfgFactorGrpRS, CCfgFactorGrpBASIS, CCfgFactorGrpTS,
+    CCfgFactorGrpLIQUIDITY, CCfgFactorGrpSIZE,
 )
 
 # ---------- project configuration ----------
@@ -109,6 +110,7 @@ cfg_factors = CCfgFactors(
     BASIS=CCfgFactorGrpBASIS(**proj_cfg.factors["BASIS"]),
     TS=CCfgFactorGrpTS(**proj_cfg.factors["TS"]),
     LIQUIDITY=CCfgFactorGrpLIQUIDITY(**proj_cfg.factors["LIQUIDITY"]),
+    SIZE=CCfgFactorGrpSIZE(**proj_cfg.factors["SIZE"]),
 )
 
 if __name__ == "__main__":

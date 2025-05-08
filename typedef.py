@@ -76,6 +76,7 @@ class TFactorClass(StrEnum):
     BASIS = "BASIS"
     TS = "TS"
     LIQUIDITY = "LIQUIDITY"
+    SIZE = "SIZE"
 
 
 TFactorName = NewType("TFactorName", str)
@@ -277,6 +278,23 @@ class CCfgFactorGrpLIQUIDITY(_CCfgFactorGrpWin):
         return self.names_vanilla + self.names_diff
 
 
+class CCfgFactorGrpSIZE(_CCfgFactorGrpWin):
+    @property
+    def factor_class(self) -> TFactorClass:
+        return TFactorClass.SIZE
+
+    def name_diff(self) -> TFactorName:
+        return TFactorName(f"{self.factor_class}DIF")
+
+    @property
+    def names_diff(self) -> TFactorNames:
+        return [self.name_diff()]
+
+    @property
+    def factor_names(self) -> TFactorNames:
+        return self.names_vanilla + self.names_diff
+
+
 @dataclass(frozen=True)
 class CCfgFactors:
     MTM: CCfgFactorGrpMTM
@@ -286,6 +304,7 @@ class CCfgFactors:
     BASIS: CCfgFactorGrpBASIS
     TS: CCfgFactorGrpTS
     LIQUIDITY: CCfgFactorGrpLIQUIDITY
+    SIZE: CCfgFactorGrpSIZE
 
     @property
     def classes(self) -> list[str]:

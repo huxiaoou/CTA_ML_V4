@@ -194,6 +194,8 @@ factors:
     wins: [ 10, 20, 60, 120, 240 ]
   LIQUIDITY:
     wins: [ 10, 20, 60, 120, 240 ]
+  SIZE:
+    wins: [ 10, 20, 60, 120, 240 ]
 
 
 # ------- factors universe -------
@@ -208,6 +210,7 @@ factors_universe_options:
       - [ BASIS, BASISRES010 ]
       - [ TS, TS240 ]
       - [ LIQUIDITY, LIQUIDITY240 ]
+      - [ SIZE, SIZEDIF ]
     Cls:
       - [ MTM, MTMD005 ]
       - [ SKEW, SKEW120 ]
@@ -217,6 +220,7 @@ factors_universe_options:
       - [ BASIS, BASISRES010 ]
       - [ TS, TS240 ]
       - [ LIQUIDITY, LIQUIDITY240 ]
+      - [ SIZE, SIZEDIF ]
   neu:
     Opn:
       - [ MTM, MTMD005 ]
@@ -227,6 +231,7 @@ factors_universe_options:
       - [ BASIS, BASISRES010 ]
       - [ TS, TS240 ]
       - [ LIQUIDITY, LIQUIDITY240 ]
+      - [ SIZE, SIZEDIF ]
     Cls:
       - [ MTM, MTMD005 ]
       - [ SKEW, SKEW020D ]
@@ -236,6 +241,7 @@ factors_universe_options:
       - [ BASIS, BASISRES010 ]
       - [ TS, TS240 ]
       - [ LIQUIDITY, LIQUIDITY240 ]
+      - [ SIZE, SIZEDIF ]
 
 # ------- models -------
 test_models:

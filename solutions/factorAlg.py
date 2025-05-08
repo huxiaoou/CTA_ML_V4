@@ -6,7 +6,7 @@ from typedef import (
     TFactorClass, CCfgFactors, TUniverse, CCfgFactorGrp,
     CCfgFactorGrpMTM, CCfgFactorGrpSKEW, CCfgFactorGrpKURT,
     CCfgFactorGrpRS, CCfgFactorGrpBASIS, CCfgFactorGrpTS,
-    CCfgFactorGrpLIQUIDITY,
+    CCfgFactorGrpLIQUIDITY, CCfgFactorGrpSIZE,
 )
 from solutions.factor import CFactorsByInstru
 
@@ -237,6 +237,28 @@ class CFactorLIQUIDITY(CFactorsByInstru):
         return factor_data
 
 
+class CFactorSIZE(CFactorsByInstru):
+    def __init__(self, cfg: CCfgFactorGrpSIZE, **kwargs):
+        self.cfg = cfg
+        super().__init__(factor_grp=cfg, **kwargs)
+
+    def cal_factor_by_instru(self, instru: str, bgn_date: str, stp_date: str, calendar: CCalendar) -> pd.DataFrame:
+        buffer_bgn_date = self.cfg.buffer_bgn_date(bgn_date, calendar)
+        size_id = "oi_major"
+        major_data = self.load_preprocess(
+            instru, bgn_date=buffer_bgn_date, stp_date=stp_date,
+            values=["trade_date", "ticker_major", "return_c_major", size_id],
+        )
+        for win, name_vanilla in zip(self.cfg.wins, self.cfg.names_vanilla):
+            size_ma = major_data[size_id].rolling(window=win, min_periods=int(win * 0.3)).mean()
+            major_data[name_vanilla] = -(major_data[size_id] / size_ma - 1)
+        n0, n1 = self.cfg.name_vanilla(240), self.cfg.name_vanilla(60)
+        major_data[self.cfg.name_diff()] = major_data[n0] - major_data[n1]
+        self.rename_ticker(major_data)
+        factor_data = self.get_factor_data(major_data, bgn_date)
+        return factor_data
+
+
 """
 ---------------------------------------------------
 Part III: pick factor
@@ -302,6 +324,14 @@ def pick_factor(
     elif fclass == TFactorClass.LIQUIDITY:
         cfg = cfg_factors.LIQUIDITY
         fac = CFactorLIQUIDITY(
+            cfg=cfg,
+            factors_by_instru_dir=factors_by_instru_dir,
+            universe=universe,
+            db_struct_preprocess=preprocess,
+        )
+    elif fclass == TFactorClass.SIZE:
+        cfg = cfg_factors.SIZE
+        fac = CFactorSIZE(
             cfg=cfg,
             factors_by_instru_dir=factors_by_instru_dir,
             universe=universe,
