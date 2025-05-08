@@ -4,7 +4,7 @@ import pandas as pd
 import skops.io as sio
 from dataclasses import dataclass
 from loguru import logger
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.linear_model import LinearRegression, Ridge
 import lightgbm as lgb
 import xgboost as xgb
@@ -15,7 +15,7 @@ from husfort.qmultiprocessing import TTask, mul_process_for_tasks, uni_process_f
 from solutions.shared import gen_factors_avlb_db, gen_test_returns_avlb_db, gen_prdct_db
 from typedef import (
     TReturnName, TFactorNames, CFactor,
-    CTestData, CTestModel,
+    CTestData, CTestModel, TModelType,
 )
 
 """
@@ -39,7 +39,8 @@ class CTestMclrn:
         self.mclrn_dir = mclrn_dir
         self.prototype = NotImplemented
         self.fitted_estimator = NotImplemented
-        self.train_score: float | None = None
+        self.trn_score: float | None = None
+        self.val_score: float | None = None
 
     @property
     def mclrn_mdl_dir(self) -> str:
@@ -128,10 +129,25 @@ class CTestMclrn:
         return aligned_data
 
     def get_X_y(self, aligned_data: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
-        return aligned_data[self.x_cols], aligned_data[self.y_col]
+        x_data, y_data = aligned_data[self.x_cols], aligned_data[self.y_col]
+        if self.test_model.using_instru:
+            x, y = x_data.reset_index(level="instrument"), y_data
+            x["instrument"] = x["instrument"].astype("category")
+        else:
+            x, y = x_data, y_data
+        if self.test_model.classification:
+            y = y.mask(y >= 0, other=1)
+            y = y.mask(y < 0, other=0)
+        return x, y
 
-    def get_X(self, x_data: pd.DataFrame) -> pd.DataFrame:
-        return x_data[self.x_cols]
+    def get_X(self, x_only_data: pd.DataFrame) -> pd.DataFrame:
+        x_data = x_only_data[self.x_cols]
+        if self.test_model.using_instru:
+            x = x_data.reset_index(level="instrument")
+            x["instrument"] = x["instrument"].astype("category")
+        else:
+            x = x_data
+        return x
 
     def display_fitted_estimator(self) -> None:
         pass
@@ -144,28 +160,25 @@ class CTestMclrn:
         else:
             return {}
 
-    def fit_estimator(self, x_data: pd.DataFrame, y_data: pd.Series):
-        if self.test_model.using_instru:
-            x, y = x_data.reset_index(level="instrument"), y_data
-            x["instrument"] = x["instrument"].astype("category")
-        else:
-            x, y = x_data, y_data
-
-        if self.test_model.classification:
-            y = y.mask(y >= 0, other=1)
-            y = y.mask(y < 0, other=0)
-
-        fit_params = self.get_fit_params(x, y)
-        if self.test_model.cv > 0:
+    def fit_estimator(self, x: pd.DataFrame, y: pd.Series):
+        if self.test_model.hyper_param_grids:
+            x_trn, x_val, y_trn, y_val = train_test_split(
+                x, y, test_size=0.1, random_state=self.RANDOM_STATE, shuffle=False,
+            )
+            fit_params = self.get_fit_params(x_val, y_val)
             grid_cv_seeker = GridSearchCV(
                 self.prototype,
                 self.test_model.hyper_param_grids,
                 cv=self.test_model.cv,
             )
-            self.fitted_estimator = grid_cv_seeker.fit(x, y, **fit_params)
+            self.fitted_estimator = grid_cv_seeker.fit(x_trn, y_trn, **fit_params)
+            self.trn_score = self.fitted_estimator.score(x_trn, y_trn)
+            self.val_score = self.fitted_estimator.score(x_val, y_val)
         else:
+            fit_params = self.get_fit_params(x, y)
             self.fitted_estimator = self.prototype.fit(x, y, **fit_params)
-        self.train_score = self.fitted_estimator.score(x, y)
+            self.trn_score = self.fitted_estimator.score(x, y)
+            self.val_score = self.fitted_estimator.score(x, y)
         return 0
 
     def check_model_existence(self, month_id: str) -> bool:
@@ -203,16 +216,14 @@ class CTestMclrn:
                 logger.info(f"No model file for {SFY(self.save_id)} at {SFY(month_id)}")
             return False
 
-    def apply_estimator(self, x_data: pd.DataFrame) -> pd.Series:
-        if self.test_model.using_instru:
-            x = x_data.reset_index(level="instrument")
-            x["instrument"] = x["instrument"].astype("category")
-        else:
-            x = x_data
-        pred = self.fitted_estimator.predict(X=x)  # type:ignore
+    def apply_estimator(self, x: pd.DataFrame) -> np.ndarray:
+        pred = self.fitted_estimator.predict(X=x)
+        return pred
+
+    def get_y_h(self, pred: np.ndarray, idx: pd.Index) -> pd.Series:
         if self.test_model.classification:
             pred = pred * 2 - 1  # (0, 1) ->(-1, 1)
-        return pd.Series(data=pred, name=self.y_col, index=x_data.index)
+        return pd.Series(data=pred, name=self.y_col, index=idx).astype(np.float64)
 
     def train(self, model_update_day: str, calendar: CCalendar, verbose: bool):
         model_update_month = model_update_day[0:6]
@@ -230,7 +241,7 @@ class CTestMclrn:
         trn_aligned_data = self.aligned_xy(trn_x_data, trn_y_data)
         trn_aligned_data = self.drop_and_fill_nan(trn_aligned_data[self.x_cols + [self.y_col]])
         x, y = self.get_X_y(aligned_data=trn_aligned_data)
-        self.fit_estimator(x_data=x, y_data=y)
+        self.fit_estimator(x=x, y=y)
         self.display_fitted_estimator()
         self.save_model(month_id=model_update_month)
         if verbose:
@@ -262,9 +273,10 @@ class CTestMclrn:
             prd_b_date, prd_e_date = prd_month_days[0], prd_month_days[-1]
             prd_s_date = calendar.get_next_date(prd_e_date, shift=1)
             prd_x_data = self.load_x(prd_b_date, prd_s_date)
-            x_data = self.get_X(x_data=prd_x_data)
-            x_data = self.drop_and_fill_nan(x_data)
-            y_h_data = self.apply_estimator(x_data=x_data)
+            x_only_data = self.drop_and_fill_nan(prd_x_data)
+            x = self.get_X(x_only_data=x_only_data)
+            pred = self.apply_estimator(x=x)
+            y_h_data = self.get_y_h(pred, idx=x_only_data.index)
             if verbose:
                 trn_e_date = calendar.get_next_date(model_update_day, shift=-self.test_data.ret.shift)
                 logger.info(
@@ -273,7 +285,7 @@ class CTestMclrn:
                     f"prediction @ [{SFG(prd_b_date)},{SFG(prd_e_date)}], "
                     f"load model from {SFG(trn_month_id)}"
                 )
-            return y_h_data.astype(np.float64)
+            return y_h_data
         else:
             return pd.Series(dtype=np.float64)
 
@@ -341,8 +353,7 @@ class CTestMclrnLinear(CTestMclrn):
         self.prototype = LinearRegression(fit_intercept=False)
 
     def display_fitted_estimator(self) -> None:
-        score = self.train_score
-        text = f"{self.save_id:<48s}| score = {score:>9.6f}"
+        text = f"{self.save_id:<48s}| score = [{self.trn_score:>7.4f}]/[{self.val_score:>7.4f}]"
         logger.info(text)
 
 
@@ -353,8 +364,9 @@ class CTestMclrnRidge(CTestMclrn):
 
     def display_fitted_estimator(self) -> None:
         alpha = self.fitted_estimator.best_estimator_.alpha
-        score = self.train_score
-        text = f"{self.save_id:<48s}| best alpha = {alpha:>6.1f} | score = {score:>9.6f}"
+        text = f"{self.save_id:<48s}| " \
+               f"alpha = {alpha:>6.1f} | " \
+               f"score = [{self.trn_score:>7.4f}]/[{self.val_score:>7.4f}]"
         logger.info(text)
 
 
@@ -366,32 +378,22 @@ class CTestMclrnLGBM(CTestMclrn):
 
         # self.prototype = lgb.LGBMRegressor(
         self.prototype = lgb.LGBMClassifier(
+            early_stopping_rounds=self.test_model.early_stopping,
+            random_state=self.RANDOM_STATE,
+            verbose=-1,
             # other fixed parameters
             # force_row_wise=True,  # cpu device only
-            verbose=-1,
-            random_state=self.RANDOM_STATE,
             # device_type="gpu", # for small data cpu is much faster
         )
 
-    def get_fit_params(self, test_x: pd.DataFrame, test_y: pd.Series) -> dict:
-        return {
-            "eval_set": [[test_x, test_y]],
-            "callbacks": [lgb.early_stopping(
-                stopping_rounds=self.test_model.early_stopping,
-                verbose=False,
-            )],
-        }
-
     def display_fitted_estimator(self) -> None:
         best_estimator = self.fitted_estimator.best_estimator_
-        score = self.train_score
         text = f"{self.save_id:<48s}| " \
-               f"n_estimator = {best_estimator.n_estimators:>2d} | " \
-               f"n_iteration = {best_estimator.best_iteration_:>2d} | " \
-               f"max_leaves = {best_estimator.max_leaves:>2d} | " \
-               f"max_depth = {best_estimator.max_depth:>2d} | " \
-               f"learning_rate = {best_estimator.learning_rate:>4.2f} | " \
-               f"score = {score:>9.6f}"
+               f"n_estimator = {best_estimator.best_iteration_:>3d}/{best_estimator.n_estimators:>3d} | " \
+               f"leaves = {best_estimator.max_leaves:>2d} | " \
+               f"depth = {best_estimator.max_depth:>2d} | " \
+               f"lr = {best_estimator.learning_rate:>4.2f} | " \
+               f"score = [{self.trn_score:>7.4f}]/[{self.val_score:>7.4f}]"
         logger.info(text)
 
 
@@ -412,21 +414,18 @@ class CTestMclrnXGB(CTestMclrn):
         )
 
     def get_fit_params(self, test_x: pd.DataFrame, test_y: pd.Series) -> dict:
-        return {
-            "eval_set": [[test_x, test_y]],
-            "verbose": False,
-        }
+        d = super().get_fit_params(test_x, test_y)
+        d.update({"verbose": False})
+        return d
 
     def display_fitted_estimator(self) -> None:
         best_estimator = self.fitted_estimator.best_estimator_
-        score = self.train_score
         text = f"{self.save_id:<48s}| " \
-               f"n_estimator = {best_estimator.n_estimators:>2d} | " \
-               f"n_iteration = {best_estimator.best_iteration:>2d} | " \
-               f"max_leaves = {best_estimator.max_leaves:>2d} | " \
-               f"max_depth = {best_estimator.max_depth:>2d} | " \
-               f"learning_rate = {best_estimator.learning_rate:>4.2f} | " \
-               f"score = {score:>9.6f}"
+               f"n_estimator = {best_estimator.best_iteration:>3d}/{best_estimator.n_estimators:>3d} | " \
+               f"leaves = {best_estimator.max_leaves:>2d} | " \
+               f"depth = {best_estimator.max_depth:>2d} | " \
+               f"lr = {best_estimator.learning_rate:>4.2f} | " \
+               f"score = [{self.trn_score:>7.4f}]/[{self.val_score:>7.4f}]"
         logger.info(text)
 
 
