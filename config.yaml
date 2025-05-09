@@ -198,6 +198,8 @@ factors:
     wins: [ 10, 20, 60, 120, 240 ]
   MF:
     wins: [ 1, 3, 5, 10]
+  JUMP:
+    wins: [ 1, 3, 5, 10]
 
 
 # ------- factors universe -------

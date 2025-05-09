@@ -6,7 +6,7 @@ from typedef import (
     TFactorClass, CCfgFactors, TUniverse, CCfgFactorGrp,
     CCfgFactorGrpMTM, CCfgFactorGrpSKEW, CCfgFactorGrpKURT,
     CCfgFactorGrpRS, CCfgFactorGrpBASIS, CCfgFactorGrpTS,
-    CCfgFactorGrpLIQUIDITY, CCfgFactorGrpSIZE, CCfgFactorGrpMF,
+    CCfgFactorGrpLIQUIDITY, CCfgFactorGrpSIZE, CCfgFactorGrpMF, CCfgFactorGrpJUMP,
 )
 from solutions.factor import CFactorsByInstru
 
@@ -57,6 +57,26 @@ def cal_top_corr(sub_data: pd.DataFrame, x: str, y: str, sort_var: str, top_size
 def auto_weight_sum(x: pd.Series) -> float:
     weight = x.abs() / x.abs().sum()
     return x @ weight
+
+
+def robust_ret_alg(x: pd.Series, y: pd.Series) -> pd.Series:
+    """
+
+    :param x: must have the same length as y
+    :param y:
+    :return:
+    """
+    return x / y.where(y != 0, np.nan) - 1
+
+
+def robust_ret_log(x: pd.Series, y: pd.Series) -> pd.Series:
+    """
+
+    :param x: must have the same length as y
+    :param y:
+    :return: for log return, x, y are supposed to be positive
+    """
+    return np.log(x.where(x > 0, np.nan) / y.where(y > 0, np.nan))
 
 
 """
@@ -277,7 +297,7 @@ class CFactorMF(CFactorsByInstru):
             values=["trade_date", "ticker_major", "vol_major", "return_c_major"],
         )
         minb_data = self.load_minute_bar(instru, bgn_date=buffer_bgn_date, stp_date=stp_date)
-        minb_data["freq_ret"] = minb_data["close"] / minb_data["pre_close"] - 1
+        minb_data["freq_ret"] = robust_ret_alg(minb_data["close"], minb_data["pre_close"])
         mf_data = minb_data.groupby(by="trade_date").apply(self.cal_mf, money="amount", ret="freq_ret")
         input_data = pd.merge(
             left=major_data,
@@ -289,6 +309,45 @@ class CFactorMF(CFactorsByInstru):
             input_data[name_vanilla] = input_data["mf"].rolling(window=win).mean()
         n0, n1 = self.cfg.name_vanilla(1), self.cfg.name_vanilla(5)
         input_data[self.cfg.name_diff()] = input_data[n0] - input_data[n1]
+        self.rename_ticker(input_data)
+        factor_data = self.get_factor_data(input_data, bgn_date=bgn_date)
+        return factor_data
+
+
+class CFactorJUMP(CFactorsByInstru):
+    def __init__(self, cfg: CCfgFactorGrpJUMP, **kwargs):
+        self.cfg = cfg
+        super().__init__(factor_grp=cfg, **kwargs)
+
+    @staticmethod
+    def cal_jump(tday_minb_data: pd.DataFrame, simple: str, compound: str) -> float:
+        net_data = tday_minb_data.iloc[2:-2, :]
+        if net_data.empty:
+            return np.nan
+        d = net_data[simple] - net_data[compound]
+        residual = 2 * d - net_data[compound] ** 2
+        return residual.mean()
+
+    def cal_factor_by_instru(self, instru: str, bgn_date: str, stp_date: str, calendar: CCalendar) -> pd.DataFrame:
+        buffer_bgn_date = self.cfg.buffer_bgn_date(bgn_date, calendar)
+        major_data = self.load_preprocess(
+            instru, bgn_date=buffer_bgn_date, stp_date=stp_date,
+            values=["trade_date", "ticker_major", "vol_major", "return_c_major"],
+        )
+        minb_data = self.load_minute_bar(instru, bgn_date=buffer_bgn_date, stp_date=stp_date)
+        minb_data["simple"] = robust_ret_alg(minb_data["close"], minb_data["pre_close"]) * 1e4
+        minb_data["compound"] = robust_ret_log(minb_data["close"], minb_data["pre_close"]) * 1e4
+        jump_data = minb_data.groupby(by="trade_date").apply(
+            self.cal_jump, simple="simple", compound="compound",
+        )
+        input_data = pd.merge(
+            left=major_data,
+            right=jump_data.reset_index().rename(columns={0: "jump"}),
+            on="trade_date",
+            how="left",
+        )
+        for win, name_vanilla in zip(self.cfg.wins, self.cfg.names_vanilla):
+            input_data[name_vanilla] = input_data["jump"].rolling(window=win).mean()
         self.rename_ticker(input_data)
         factor_data = self.get_factor_data(input_data, bgn_date=bgn_date)
         return factor_data
@@ -376,6 +435,15 @@ def pick_factor(
     elif fclass == TFactorClass.MF:
         cfg = cfg_factors.MF
         fac = CFactorMF(
+            cfg=cfg,
+            factors_by_instru_dir=factors_by_instru_dir,
+            universe=universe,
+            db_struct_preprocess=preprocess,
+            db_struct_minute_bar=minute_bar,
+        )
+    elif fclass == TFactorClass.JUMP:
+        cfg = cfg_factors.JUMP
+        fac = CFactorJUMP(
             cfg=cfg,
             factors_by_instru_dir=factors_by_instru_dir,
             universe=universe,
