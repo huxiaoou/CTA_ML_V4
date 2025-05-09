@@ -18,6 +18,7 @@ python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass BASIS
 python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass TS
 python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass LIQUIDITY
 python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass SIZE
+python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass MF
 
 python main.py --bgn $bgn_date --stp $stp_date ic --fclass MTM
 python main.py --bgn $bgn_date --stp $stp_date ic --fclass SKEW
@@ -27,6 +28,7 @@ python main.py --bgn $bgn_date --stp $stp_date ic --fclass BASIS
 python main.py --bgn $bgn_date --stp $stp_date ic --fclass TS
 python main.py --bgn $bgn_date --stp $stp_date ic --fclass LIQUIDITY
 python main.py --bgn $bgn_date --stp $stp_date ic --fclass SIZE
+python main.py --bgn $bgn_date --stp $stp_date ic --fclass MF
 
 python main.py --bgn $bgn_date_mclrn --stp $stp_date mclrn
 python main.py --bgn $bgn_date_sig --stp $stp_date signals

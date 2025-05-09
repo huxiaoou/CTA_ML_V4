@@ -9,7 +9,7 @@ from typedef import (
     CCfgFactors,
     CCfgFactorGrpMTM, CCfgFactorGrpSKEW, CCfgFactorGrpKURT,
     CCfgFactorGrpRS, CCfgFactorGrpBASIS, CCfgFactorGrpTS,
-    CCfgFactorGrpLIQUIDITY, CCfgFactorGrpSIZE,
+    CCfgFactorGrpLIQUIDITY, CCfgFactorGrpSIZE, CCfgFactorGrpMF,
 )
 
 # ---------- project configuration ----------
@@ -111,6 +111,7 @@ cfg_factors = CCfgFactors(
     TS=CCfgFactorGrpTS(**proj_cfg.factors["TS"]),
     LIQUIDITY=CCfgFactorGrpLIQUIDITY(**proj_cfg.factors["LIQUIDITY"]),
     SIZE=CCfgFactorGrpSIZE(**proj_cfg.factors["SIZE"]),
+    MF=CCfgFactorGrpMF(**proj_cfg.factors["MF"]),
 )
 
 if __name__ == "__main__":

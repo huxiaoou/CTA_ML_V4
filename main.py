@@ -131,6 +131,7 @@ if __name__ == "__main__":
             factors_by_instru_dir=proj_cfg.factors_by_instru_dir,
             universe=proj_cfg.universe,
             preprocess=db_struct_cfg.preprocess,
+            minute_bar=db_struct_cfg.minute_bar,
         )
         fac.main(
             bgn_date=bgn_date, stp_date=stp_date, calendar=calendar,

@@ -6,7 +6,7 @@ from typedef import (
     TFactorClass, CCfgFactors, TUniverse, CCfgFactorGrp,
     CCfgFactorGrpMTM, CCfgFactorGrpSKEW, CCfgFactorGrpKURT,
     CCfgFactorGrpRS, CCfgFactorGrpBASIS, CCfgFactorGrpTS,
-    CCfgFactorGrpLIQUIDITY, CCfgFactorGrpSIZE,
+    CCfgFactorGrpLIQUIDITY, CCfgFactorGrpSIZE, CCfgFactorGrpMF,
 )
 from solutions.factor import CFactorsByInstru
 
@@ -258,6 +258,42 @@ class CFactorSIZE(CFactorsByInstru):
         return factor_data
 
 
+class CFactorMF(CFactorsByInstru):
+    def __init__(self, cfg: CCfgFactorGrpMF, **kwargs):
+        self.cfg = cfg
+        super().__init__(factor_grp=cfg, **kwargs)
+
+    @staticmethod
+    def cal_mf(tday_minb_data: pd.DataFrame, money: str, ret: str) -> float:
+        wgt = tday_minb_data[money] / tday_minb_data[money].sum()
+        sgn = tday_minb_data[ret].fillna(0) * 1e4
+        mf = -wgt @ sgn
+        return mf
+
+    def cal_factor_by_instru(self, instru: str, bgn_date: str, stp_date: str, calendar: CCalendar) -> pd.DataFrame:
+        buffer_bgn_date = self.cfg.buffer_bgn_date(bgn_date, calendar)
+        major_data = self.load_preprocess(
+            instru, bgn_date=buffer_bgn_date, stp_date=stp_date,
+            values=["trade_date", "ticker_major", "vol_major", "return_c_major"],
+        )
+        minb_data = self.load_minute_bar(instru, bgn_date=buffer_bgn_date, stp_date=stp_date)
+        minb_data["freq_ret"] = minb_data["close"] / minb_data["pre_close"] - 1
+        mf_data = minb_data.groupby(by="trade_date").apply(self.cal_mf, money="amount", ret="freq_ret")
+        input_data = pd.merge(
+            left=major_data,
+            right=mf_data.reset_index().rename(columns={0: "mf"}),
+            on="trade_date",
+            how="left",
+        )
+        for win, name_vanilla in zip(self.cfg.wins, self.cfg.names_vanilla):
+            input_data[name_vanilla] = input_data["mf"].rolling(window=win).mean()
+        n0, n1 = self.cfg.name_vanilla(1), self.cfg.name_vanilla(5)
+        input_data[self.cfg.name_diff()] = input_data[n0] - input_data[n1]
+        self.rename_ticker(input_data)
+        factor_data = self.get_factor_data(input_data, bgn_date=bgn_date)
+        return factor_data
+
+
 """
 ---------------------------------------------------
 Part III: pick factor
@@ -271,6 +307,7 @@ def pick_factor(
         factors_by_instru_dir: str,
         universe: TUniverse,
         preprocess: CDbStruct,
+        minute_bar: CDbStruct,
 ) -> tuple[CFactorsByInstru, CCfgFactorGrp]:
     if fclass == TFactorClass.MTM:
         cfg = cfg_factors.MTM
@@ -335,6 +372,15 @@ def pick_factor(
             factors_by_instru_dir=factors_by_instru_dir,
             universe=universe,
             db_struct_preprocess=preprocess,
+        )
+    elif fclass == TFactorClass.MF:
+        cfg = cfg_factors.MF
+        fac = CFactorMF(
+            cfg=cfg,
+            factors_by_instru_dir=factors_by_instru_dir,
+            universe=universe,
+            db_struct_preprocess=preprocess,
+            db_struct_minute_bar=minute_bar,
         )
     else:
         raise NotImplementedError(f"Invalid fclass = {fclass}")
