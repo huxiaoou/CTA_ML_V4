@@ -197,9 +197,9 @@ factors:
   SIZE:
     wins: [ 10, 20, 60, 120, 240 ]
   MF:
-    wins: [ 1, 3, 5, 10]
+    wins: [ 1, 3, 5, 10 ]
   JUMP:
-    wins: [ 1, 3, 5, 10]
+    wins: [ 1, 3, 5, 10 ]
 
 
 # ------- factors universe -------
@@ -215,6 +215,7 @@ factors_universe_options:
       - [ TS, TS240 ]
       - [ LIQUIDITY, LIQUIDITY240 ]
       - [ SIZE, SIZEDIF ]
+      - [ JUMP, JUMP001 ]
     Cls:
       - [ MTM, MTMDIF ]
       - [ SKEW, SKEW120 ]
@@ -225,6 +226,7 @@ factors_universe_options:
       - [ TS, TS240 ]
       - [ LIQUIDITY, LIQUIDITY240 ]
       - [ SIZE, SIZEDIF ]
+      - [ JUMP, JUMP001 ]
   neu:
     Opn:
       - [ MTM, MTMDIF ]
@@ -236,6 +238,7 @@ factors_universe_options:
       - [ TS, TS240 ]
       - [ LIQUIDITY, LIQUIDITY240 ]
       - [ SIZE, SIZEDIF ]
+      - [ JUMP, JUMP001 ]
     Cls:
       - [ MTM, MTMDIF ]
       - [ SKEW, SKEW020D ]
@@ -246,18 +249,19 @@ factors_universe_options:
       - [ TS, TS240 ]
       - [ LIQUIDITY, LIQUIDITY240 ]
       - [ SIZE, SIZEDIF ]
+      - [ JUMP, JUMP001 ]
 
 # ------- models -------
 test_models:
   - model_type: LINEAR
-    trn_win: 60
+    trn_win: 240
     using_instru: false
     classification: false
     cv: 0
     early_stopping: 0
     hyper_param_grids:
   - model_type: RIDGE
-    trn_win: 60
+    trn_win: 240
     using_instru: false
     classification: false
     cv: 5
@@ -265,7 +269,7 @@ test_models:
     hyper_param_grids:
       alpha: [ 0.01, 1, 10 ]
   - model_type: LOGISTIC
-    trn_win: 60
+    trn_win: 240
     using_instru: false
     classification: true
     cv: 5
@@ -273,7 +277,7 @@ test_models:
     hyper_param_grids:
       C: [ 5, 10, 20, 50, 100 ]
   - model_type: LGBM
-    trn_win: 60
+    trn_win: 240
     using_instru: true
     classification: true
     cv: 5
@@ -286,7 +290,7 @@ test_models:
       learning_rate: [ 0.01, 0.05, 0.1 ]
       metric: [ "binary_logloss" ] # ["l1", "l2"] for regressor, ["binary_logloss"] for classifier
   - model_type: XGB
-    trn_win: 60
+    trn_win: 240
     using_instru: true
     classification: true
     cv: 5
