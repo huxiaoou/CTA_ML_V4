@@ -216,8 +216,8 @@ factors_universe_options:
       - [ BASIS, BASISRES010 ]
       - [ TS, TS240 ]
       - [ LIQUIDITY, LIQUIDITY240 ]
-      #      - [ SIZE, SIZEDIF ]
       - [ CTP, CTP120L90 ]
+      - [ SIZE, SIZEDIF ]
     Cls:
       - [ MTM, MTMDIF ]
       - [ SKEW, SKEW120 ]
@@ -227,8 +227,8 @@ factors_universe_options:
       - [ BASIS, BASISRES010 ]
       - [ TS, TS240 ]
       - [ LIQUIDITY, LIQUIDITY240 ]
-      #      - [ SIZE, SIZEDIF ]
       - [ CTP, CTP120L90 ]
+      - [ SIZE, SIZEDIF ]
   neu:
     Opn:
       - [ MTM, MTMDIF ]
@@ -239,8 +239,8 @@ factors_universe_options:
       - [ BASIS, BASISRES010 ]
       - [ TS, TS240 ]
       - [ LIQUIDITY, LIQUIDITY240 ]
-      #      - [ SIZE, SIZEDIF ]
       - [ CTP, CTP120L90 ]
+      - [ SIZE, SIZEDIF ]
     Cls:
       - [ MTM, MTMDIF ]
       - [ SKEW, SKEW020D ]
@@ -250,8 +250,8 @@ factors_universe_options:
       - [ BASIS, BASISRES010 ]
       - [ TS, TS240 ]
       - [ LIQUIDITY, LIQUIDITY240 ]
-      #      - [ SIZE, SIZEDIF ]
       - [ CTP, CTP120L90 ]
+      - [ SIZE, SIZEDIF ]
 
 # ------- models -------
 test_models:
@@ -277,7 +277,7 @@ test_models:
     cv: 5
     early_stopping: 0
     hyper_param_grids:
-      C: [ 5, 10, 20, 50, 100 ]
+      C: [ 0.01, 0.1, 1 ]
 #  - model_type: LGBM
 #    trn_win: 60
 #    using_instru: true
