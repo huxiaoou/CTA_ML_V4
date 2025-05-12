@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from itertools import product
 from husfort.qcalendar import CCalendar
 from husfort.qsqlite import CDbStruct
 from typedef import (
@@ -7,6 +8,7 @@ from typedef import (
     CCfgFactorGrpMTM, CCfgFactorGrpSKEW, CCfgFactorGrpKURT,
     CCfgFactorGrpRS, CCfgFactorGrpBASIS, CCfgFactorGrpTS,
     CCfgFactorGrpLIQUIDITY, CCfgFactorGrpSIZE, CCfgFactorGrpMF, CCfgFactorGrpJUMP,
+    _CCfgFactorGrpWinLambda, CCfgFactorGrpCTP,
 )
 from solutions.factor import CFactorsByInstru
 
@@ -353,6 +355,71 @@ class CFactorJUMP(CFactorsByInstru):
         return factor_data
 
 
+class __CFactorCORR(CFactorsByInstru):
+    def __init__(self, cfg: _CCfgFactorGrpWinLambda, **kwargs):
+        self.cfg = cfg
+        super().__init__(factor_grp=cfg, **kwargs)
+
+    @staticmethod
+    def cal_rolling_top_corr(
+            raw_data: pd.DataFrame,
+            bgn_date: str, stp_date: str,
+            win: int, top: float,
+            x: str, y: str,
+            sort_var: str, direction: int,
+    ) -> pd.Series:
+        top_size = int(win * top) + 1
+        r_data = {}
+        for i, trade_date in enumerate(raw_data.index):
+            if trade_date < bgn_date:
+                continue
+            elif trade_date >= stp_date:
+                break
+            sub_data = raw_data.iloc[i - win + 1: i + 1]
+            r_data[trade_date] = cal_top_corr(sub_data, x=x, y=y, sort_var=sort_var, top_size=top_size)
+        return pd.Series(r_data) * direction
+
+    def cal_core(
+            self,
+            raw_data: pd.DataFrame,
+            bgn_date: str, stp_date: str,
+            x: str, y: str,
+            sort_var: str, direction: int = -1,
+    ):
+        for win, lbd in product(self.cfg.wins, self.cfg.lbds):
+            name_vanilla = self.cfg.name_vanilla(win, lbd)
+            raw_data[name_vanilla] = self.cal_rolling_top_corr(
+                raw_data=raw_data,
+                bgn_date=bgn_date, stp_date=stp_date,
+                win=win, top=lbd, x=x, y=y,
+                sort_var=sort_var, direction=direction,
+            )
+        return 0
+
+
+class CFactorCTP(__CFactorCORR):
+    def __init__(self, cfg: CCfgFactorGrpCTP, **kwargs):
+        super().__init__(cfg=cfg, **kwargs)
+
+    def cal_factor_by_instru(self, instru: str, bgn_date: str, stp_date: str, calendar: CCalendar) -> pd.DataFrame:
+        buffer_bgn_date = calendar.get_start_date(bgn_date, max(self.cfg.wins + [2]), -5)
+        adj_data = self.load_preprocess(
+            instru, bgn_date=buffer_bgn_date, stp_date=stp_date,
+            values=["trade_date", "ticker_major", "return_c_major", "oi_major", "vol_major", "closeI"],
+        )
+        adj_data = adj_data.set_index("trade_date")
+        adj_data["aver_oi"] = adj_data["oi_major"].rolling(window=2).mean()
+        adj_data["turnover"] = adj_data["vol_major"] / adj_data["aver_oi"]
+        x, y = "turnover", "closeI"
+        self.cal_core(
+            raw_data=adj_data, bgn_date=bgn_date, stp_date=stp_date, x=x, y=y, sort_var="vol_major",
+        )
+        adj_data = adj_data.reset_index()
+        self.rename_ticker(adj_data)
+        factor_data = self.get_factor_data(adj_data, bgn_date=bgn_date)
+        return factor_data
+
+
 """
 ---------------------------------------------------
 Part III: pick factor
@@ -449,6 +516,14 @@ def pick_factor(
             universe=universe,
             db_struct_preprocess=preprocess,
             db_struct_minute_bar=minute_bar,
+        )
+    elif fclass == TFactorClass.CTP:
+        cfg = cfg_factors.CTP
+        fac = CFactorCTP(
+            cfg=cfg,
+            factors_by_instru_dir=factors_by_instru_dir,
+            universe=universe,
+            db_struct_preprocess=preprocess,
         )
     else:
         raise NotImplementedError(f"Invalid fclass = {fclass}")

@@ -10,6 +10,7 @@ from typedef import (
     CCfgFactorGrpMTM, CCfgFactorGrpSKEW, CCfgFactorGrpKURT,
     CCfgFactorGrpRS, CCfgFactorGrpBASIS, CCfgFactorGrpTS,
     CCfgFactorGrpLIQUIDITY, CCfgFactorGrpSIZE, CCfgFactorGrpMF, CCfgFactorGrpJUMP,
+    CCfgFactorGrpCTP,
 )
 
 # ---------- project configuration ----------
@@ -113,6 +114,7 @@ cfg_factors = CCfgFactors(
     SIZE=CCfgFactorGrpSIZE(**proj_cfg.factors["SIZE"]),
     MF=CCfgFactorGrpMF(**proj_cfg.factors["MF"]),
     JUMP=CCfgFactorGrpJUMP(**proj_cfg.factors["JUMP"]),
+    CTP=CCfgFactorGrpCTP(**proj_cfg.factors["CTP"]),
 )
 
 if __name__ == "__main__":

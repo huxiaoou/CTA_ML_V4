@@ -1,4 +1,5 @@
 import os
+from itertools import product
 from typing import NewType
 from enum import StrEnum
 from dataclasses import dataclass, fields
@@ -79,6 +80,7 @@ class TFactorClass(StrEnum):
     SIZE = "SIZE"
     MF = "MF"
     JUMP = "JUMP"
+    CTP = "CTP"
 
 
 TFactorName = NewType("TFactorName", str)
@@ -163,6 +165,28 @@ class _CCfgFactorGrpWin(CCfgFactorGrp):
     @property
     def names_res(self) -> TFactorNames:
         return [self.name_res(w) for w in self.wins]
+
+
+@dataclass(frozen=True)
+class _CCfgFactorGrpWinLambda(CCfgFactorGrp):
+    wins: list[int]
+    lbds: list[float]
+
+    # --- name
+    def name_vanilla(self, w: int, l: float) -> TFactorName:
+        return TFactorName(f"{self.factor_class}{w:03d}L{int(l * 100):02d}")
+
+    def factor_name(self, w: int, l: float) -> TFactorName:
+        return self.name_vanilla(w, l)
+
+    # --- names
+    @property
+    def names_vanilla(self) -> TFactorNames:
+        return [self.name_vanilla(w, l) for w, l in product(self.wins, self.lbds)]
+
+    @property
+    def factor_names(self) -> TFactorNames:
+        return [self.factor_name(w, l) for w, l in product(self.wins, self.lbds)]
 
 
 """
@@ -281,6 +305,12 @@ class CCfgFactorGrpJUMP(_CCfgFactorGrpWin):
         return TFactorClass.JUMP
 
 
+class CCfgFactorGrpCTP(_CCfgFactorGrpWinLambda):
+    @property
+    def factor_class(self) -> TFactorClass:
+        return TFactorClass.CTP
+
+
 @dataclass(frozen=True)
 class CCfgFactors:
     MTM: CCfgFactorGrpMTM
@@ -293,6 +323,7 @@ class CCfgFactors:
     SIZE: CCfgFactorGrpSIZE
     MF: CCfgFactorGrpMF
     JUMP: CCfgFactorGrpJUMP
+    CTP: CCfgFactorGrpCTP
 
     @property
     def classes(self) -> list[str]:
