@@ -277,7 +277,7 @@ test_models:
     cv: 5
     early_stopping: 0
     hyper_param_grids:
-      C: [ 0.01, 0.1, 1 ]
+      C: [ 10, 100, 1000 ]
 #  - model_type: LGBM
 #    trn_win: 60
 #    using_instru: true
