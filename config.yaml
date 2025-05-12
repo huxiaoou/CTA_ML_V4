@@ -203,6 +203,9 @@ factors:
   CTP:
     wins: [ 60, 120, 180 ]
     lbds: [ 0.2, 0.5, 0.9 ]
+  CTR:
+    wins: [ 60, 120, 180 ]
+    lbds: [ 0.2, 0.5, 0.9 ]
 
 # ------- factors universe -------
 factors_universe_options:
