@@ -56,6 +56,25 @@ def cal_top_corr(sub_data: pd.DataFrame, x: str, y: str, sort_var: str, top_size
     return r
 
 
+def cal_rolling_top_corr(
+        raw_data: pd.DataFrame,
+        bgn_date: str, stp_date: str,
+        win: int, top: float,
+        x: str, y: str,
+        sort_var: str, direction: int,
+) -> pd.Series:
+    top_size = int(win * top) + 1
+    r_data = {}
+    for i, trade_date in enumerate(raw_data.index):
+        if trade_date < bgn_date:
+            continue
+        elif trade_date >= stp_date:
+            break
+        sub_data = raw_data.iloc[i - win + 1: i + 1]
+        r_data[trade_date] = cal_top_corr(sub_data, x=x, y=y, sort_var=sort_var, top_size=top_size)
+    return pd.Series(r_data) * direction
+
+
 def auto_weight_sum(x: pd.Series) -> float:
     weight = x.abs() / x.abs().sum()
     return x @ weight
@@ -360,25 +379,6 @@ class __CFactorCORR(CFactorsByInstru):
         self.cfg = cfg
         super().__init__(factor_grp=cfg, **kwargs)
 
-    @staticmethod
-    def cal_rolling_top_corr(
-            raw_data: pd.DataFrame,
-            bgn_date: str, stp_date: str,
-            win: int, top: float,
-            x: str, y: str,
-            sort_var: str, direction: int,
-    ) -> pd.Series:
-        top_size = int(win * top) + 1
-        r_data = {}
-        for i, trade_date in enumerate(raw_data.index):
-            if trade_date < bgn_date:
-                continue
-            elif trade_date >= stp_date:
-                break
-            sub_data = raw_data.iloc[i - win + 1: i + 1]
-            r_data[trade_date] = cal_top_corr(sub_data, x=x, y=y, sort_var=sort_var, top_size=top_size)
-        return pd.Series(r_data) * direction
-
     def cal_core(
             self,
             raw_data: pd.DataFrame,
@@ -388,7 +388,7 @@ class __CFactorCORR(CFactorsByInstru):
     ):
         for win, lbd in product(self.cfg.wins, self.cfg.lbds):
             name_vanilla = self.cfg.name_vanilla(win, lbd)
-            raw_data[name_vanilla] = self.cal_rolling_top_corr(
+            raw_data[name_vanilla] = cal_rolling_top_corr(
                 raw_data=raw_data,
                 bgn_date=bgn_date, stp_date=stp_date,
                 win=win, top=lbd, x=x, y=y,
