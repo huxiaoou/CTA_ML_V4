@@ -376,6 +376,7 @@ class CTestMclrnLogistic(CTestMclrn):
         self.prototype = LogisticRegression(
             fit_intercept=False,
             random_state=self.RANDOM_STATE,
+            tol=0.01,
         )
 
     def display_fitted_estimator(self) -> None:
