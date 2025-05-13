@@ -405,7 +405,7 @@ class CFactorCTP(__CFactorCORR):
         buffer_bgn_date = calendar.get_start_date(bgn_date, max(self.cfg.wins + [2]), -5)
         adj_data = self.load_preprocess(
             instru, bgn_date=buffer_bgn_date, stp_date=stp_date,
-            values=["trade_date", "ticker_major", "return_c_major", "oi_major", "vol_major", "closeI"],
+            values=["trade_date", "ticker_major", "closeI", "oi_major", "vol_major"],
         )
         adj_data = adj_data.set_index("trade_date")
         adj_data["aver_oi"] = adj_data["oi_major"].rolling(window=2).mean()

@@ -220,6 +220,7 @@ factors_universe_options:
       - [ TS, TS240 ]
       - [ LIQUIDITY, LIQUIDITY240 ]
       - [ CTP, CTP120L90 ]
+      - [ CTR, CTR060L50 ]
       - [ SIZE, SIZEDIF ]
     Cls:
       - [ MTM, MTMDIF ]
@@ -231,6 +232,7 @@ factors_universe_options:
       - [ TS, TS240 ]
       - [ LIQUIDITY, LIQUIDITY240 ]
       - [ CTP, CTP120L90 ]
+      - [ CTR, CTR060L50 ]
       - [ SIZE, SIZEDIF ]
   neu:
     Opn:
