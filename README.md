@@ -99,3 +99,4 @@ mclrn.py
 mclrn_parser.py
 
 + update import
++ update parse_config_to_mclrn_test

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from loguru import logger
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.linear_model import LinearRegression, Ridge, LogisticRegression
+from solutions.mclrn_custom import BaseLine
 import lightgbm as lgb
 import xgboost as xgb
 from husfort.qcalendar import CCalendar
@@ -198,18 +199,22 @@ class CTestMclrn:
         model_file = f"{self.save_id}.skops"
         model_path = os.path.join(self.mclrn_mdl_dir, month_id, model_file)
         if os.path.exists(model_path):
-            self.fitted_estimator = sio.load(
-                model_path,
-                trusted=[
-                    "collections.defaultdict",
-                    "collections.OrderedDict",
-                    "lightgbm.basic.Booster", "lightgbm.sklearn.LGBMRegressor", "lightgbm.sklearn.LGBMClassifier",
-                    "xgboost.core.Booster", "xgboost.sklearn.XGBRegressor", "xgboost.sklearn.XGBClassifier",
-                    "sklearn.metrics._scorer._PassthroughScorer",
-                    "sklearn.utils._metadata_requests.MetadataRequest",
-                    "sklearn.utils._metadata_requests.MethodMetadataRequest",
-                ],
-            )
+            untrusted_types = sio.get_untrusted_types(file=model_path)
+            self.fitted_estimator = sio.load(model_path, trusted=untrusted_types)
+            # trusted=[
+            #     "collections.defaultdict",
+            #     "collections.OrderedDict",
+            #     "solutions.mclrn_custom.BaseLine",
+            #     "lightgbm.basic.Booster", "lightgbm.sklearn.LGBMRegressor", "lightgbm.sklearn.LGBMClassifier",
+            #     "xgboost.core.Booster", "xgboost.sklearn.XGBRegressor", "xgboost.sklearn.XGBClassifier",
+            #     "sklearn.metrics._scorer._PassthroughScorer",
+            #     "sklearn.utils._metadata_requests.MetadataRequest",
+            #     "sklearn.utils._metadata_requests.MethodMetadataRequest",
+            #     'builtins.object', 'numpy.dtype', 'pandas._libs.index.ObjectEngine',
+            #     'pandas._libs.internals.BlockValuesRefs', 'pandas.core.indexes.base.Index',
+            #     'pandas.core.internals.managers.SingleBlockManager', 'pandas.core.series.Series'
+            # ],
+            # )
             return True
         else:
             if verbose:
@@ -345,6 +350,16 @@ class CTestMclrn:
 """
 Part II: Specific class for Machine Learning
 """
+
+
+class CTestMclrnBaseLine(CTestMclrn):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.prototype = BaseLine(icir=False)
+
+    def display_fitted_estimator(self) -> None:
+        text = f"{self.save_id:<52s}| score = [{self.trn_score:>7.4f}]/[{self.val_score:>7.4f}]"
+        logger.info(text)
 
 
 class CTestMclrnLinear(CTestMclrn):

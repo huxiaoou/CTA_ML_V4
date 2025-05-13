@@ -5,7 +5,7 @@ from loguru import logger
 from husfort.qutility import SFG, SFY
 from husfort.qutility import check_and_mkdir
 from solutions.mclrn import (
-    CTestMclrn,
+    CTestMclrn, CTestMclrnBaseLine,
     CTestMclrnLinear, CTestMclrnRidge, CTestMclrnLogistic,
     CTestMclrnLGBM, CTestMclrnXGB,
 )
@@ -87,6 +87,7 @@ def parse_config_to_mclrn_test(
     )
     tm = CTestModel(**test_model)
     x: dict[str, type[CTestMclrn]] = {
+        TModelType.BASELINE: CTestMclrnBaseLine,
         TModelType.LINEAR: CTestMclrnLinear,
         TModelType.RIDGE: CTestMclrnRidge,
         TModelType.LOGISTIC: CTestMclrnLogistic,

@@ -375,6 +375,7 @@ Part V: models
 
 
 class TModelType(StrEnum):
+    BASELINE = "BASELINE"
     LINEAR = "LINEAR"
     RIDGE = "RIDGE"
     LOGISTIC = "LOGISTIC"
