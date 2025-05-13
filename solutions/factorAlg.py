@@ -8,7 +8,7 @@ from typedef import (
     CCfgFactorGrpMTM, CCfgFactorGrpSKEW, CCfgFactorGrpKURT,
     CCfgFactorGrpRS, CCfgFactorGrpBASIS, CCfgFactorGrpTS,
     CCfgFactorGrpLIQUIDITY, CCfgFactorGrpSIZE, CCfgFactorGrpMF, CCfgFactorGrpJUMP,
-    _CCfgFactorGrpWinLambda, CCfgFactorGrpCTP, CCfgFactorGrpCTR,
+    _CCfgFactorGrpWinLambda, CCfgFactorGrpCTP, CCfgFactorGrpCTR, CCfgFactorGrpCVP,
 )
 from solutions.factor import CFactorsByInstru
 
@@ -443,6 +443,30 @@ class CFactorCTR(__CFactorCORR):
         return factor_data
 
 
+class CFactorCVP(__CFactorCORR):
+    def __init__(self, cfg: CCfgFactorGrpCVP, **kwargs):
+        super().__init__(cfg=cfg, **kwargs)
+
+    def cal_factor_by_instru(self, instru: str, bgn_date: str, stp_date: str, calendar: CCalendar) -> pd.DataFrame:
+        buffer_bgn_date = calendar.get_start_date(bgn_date, max(self.cfg.wins + [2]), -5)
+        adj_data = self.load_preprocess(
+            instru, bgn_date=buffer_bgn_date, stp_date=stp_date,
+            values=["trade_date", "ticker_major", "closeI", "oi_major", "vol_major"],
+        )
+        adj_data = adj_data.set_index("trade_date")
+        minb_data = self.load_minute_bar(instru, bgn_date=buffer_bgn_date, stp_date=stp_date)
+        minb_data["simple"] = robust_ret_alg(minb_data["close"], minb_data["pre_close"]) * 1e4
+        adj_data["vol"] = minb_data.groupby(by="trade_date")["simple"].apply(lambda z: z.std())
+        x, y = "vol", "closeI"
+        self.cal_core(
+            raw_data=adj_data, bgn_date=bgn_date, stp_date=stp_date, x=x, y=y, sort_var="vol_major",
+        )
+        adj_data = adj_data.reset_index()
+        self.rename_ticker(adj_data)
+        factor_data = self.get_factor_data(adj_data, bgn_date=bgn_date)
+        return factor_data
+
+
 """
 ---------------------------------------------------
 Part III: pick factor
@@ -555,6 +579,15 @@ def pick_factor(
             factors_by_instru_dir=factors_by_instru_dir,
             universe=universe,
             db_struct_preprocess=preprocess,
+        )
+    elif fclass == TFactorClass.CVP:
+        cfg = cfg_factors.CVP
+        fac = CFactorCVP(
+            cfg=cfg,
+            factors_by_instru_dir=factors_by_instru_dir,
+            universe=universe,
+            db_struct_preprocess=preprocess,
+            db_struct_minute_bar=minute_bar,
         )
     else:
         raise NotImplementedError(f"Invalid fclass = {fclass}")

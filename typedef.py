@@ -81,6 +81,7 @@ class TFactorClass(StrEnum):
     JUMP = "JUMP"
     CTP = "CTP"
     CTR = "CTR"
+    CVP = "CVP"
 
 
 TFactorName = NewType("TFactorName", str)
@@ -317,6 +318,12 @@ class CCfgFactorGrpCTR(_CCfgFactorGrpWinLambda):
         return TFactorClass.CTR
 
 
+class CCfgFactorGrpCVP(_CCfgFactorGrpWinLambda):
+    @property
+    def factor_class(self) -> TFactorClass:
+        return TFactorClass.CVP
+
+
 @dataclass(frozen=True)
 class CCfgFactors:
     MTM: CCfgFactorGrpMTM
@@ -331,6 +338,7 @@ class CCfgFactors:
     JUMP: CCfgFactorGrpJUMP
     CTP: CCfgFactorGrpCTP
     CTR: CCfgFactorGrpCTR
+    CVP: CCfgFactorGrpCVP
 
     @property
     def classes(self) -> list[str]:
