@@ -31,9 +31,9 @@ python main.py --bgn $bgn_date --stp $stp_date ic --fclass LIQUIDITY
 python main.py --bgn $bgn_date --stp $stp_date ic --fclass SIZE
 python main.py --bgn $bgn_date --stp $stp_date ic --fclass CTP
 python main.py --bgn $bgn_date --stp $stp_date ic --fclass CVP
+
 python main.py --bgn $bgn_date_mclrn --stp $stp_date mclrn
 python main.py --bgn $bgn_date_sig --stp $stp_date signals
-
 python main.py --bgn $bgn_date --stp $stp_date quick
 python main.py --bgn $bgn_date --stp $stp_date --nomp simulations
 python main.py --bgn $bgn_date --stp $stp_date evaluations
