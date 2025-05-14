@@ -155,7 +155,7 @@ class CTestMclrn:
         pass
 
     def get_fit_params(self, test_x: pd.DataFrame, test_y: pd.Series) -> dict:
-        return {"eval_set": [[test_x, test_y]]}
+        return {"eval_set": [[test_x, test_y]]} if self.test_model.early_stopping > 0 else {}
 
     def fit_estimator(self, x: pd.DataFrame, y: pd.Series):
         if self.test_model.hyper_param_grids:
@@ -168,14 +168,12 @@ class CTestMclrn:
                 x_trn, x_val, y_trn, y_val = train_test_split(
                     x, y, test_size=0.1, random_state=self.RANDOM_STATE, shuffle=False,
                 )
-                fit_params = self.get_fit_params(x_val, y_val)
-                self.fitted_estimator = grid_cv_seeker.fit(x_trn, y_trn, **fit_params)
-                self.trn_score = self.fitted_estimator.score(x_trn, y_trn)
-                self.val_score = self.fitted_estimator.score(x_val, y_val)
             else:
-                self.fitted_estimator = grid_cv_seeker.fit(x, y)
-                self.trn_score = self.fitted_estimator.score(x, y)
-                self.val_score = self.fitted_estimator.score(x, y)
+                x_trn, x_val, y_trn, y_val = x, x, y, y
+            fit_params = self.get_fit_params(x_val, y_val)
+            self.fitted_estimator = grid_cv_seeker.fit(x_trn, y_trn, **fit_params)
+            self.trn_score = self.fitted_estimator.score(x_trn, y_trn)
+            self.val_score = self.fitted_estimator.score(x_val, y_val)
         else:
             fit_params = self.get_fit_params(x, y)
             self.fitted_estimator = self.prototype.fit(x, y, **fit_params)
