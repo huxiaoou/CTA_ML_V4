@@ -505,19 +505,21 @@ class CFactorSMT(CFactorsByInstru):
 
     def cal_by_trade_date(self, trade_date_data: pd.DataFrame) -> pd.Series:
         res = {}
-        for lbd, name_vanilla in zip(self.cfg.lbds, self.cfg.names_vanilla):
+        for lbd, name_lbd in zip(self.cfg.lbds, self.cfg.names_lbd):
             smt_p, smt_r = self.cal_smt(trade_date_data, lbd=lbd, prc="vwap", ret="freq_ret")
-            res[name_vanilla], _ = smt_p, smt_r
+            res[name_lbd], _ = smt_p, smt_r
         return pd.Series(res)
 
     def cal_factor_by_instru(
             self, instru: str, bgn_date: str, stp_date: str, calendar: CCalendar
     ) -> pd.DataFrame:
+        buffer_bgn_date = self.cfg.buffer_bgn_date(bgn_date, calendar)
+
         adj_major_data = self.load_preprocess(
-            instru, bgn_date=bgn_date, stp_date=stp_date,
+            instru, bgn_date=buffer_bgn_date, stp_date=stp_date,
             values=["trade_date", "ticker_major"],
         )
-        adj_minb_data = self.load_minute_bar(instru, bgn_date=bgn_date, stp_date=stp_date)
+        adj_minb_data = self.load_minute_bar(instru, bgn_date=buffer_bgn_date, stp_date=stp_date)
         adj_minb_data["freq_ret"] = robust_ret_alg(adj_minb_data["close"], adj_minb_data["pre_close"])
         adj_minb_data["freq_ret"] = adj_minb_data["freq_ret"].fillna(0)
 
@@ -529,6 +531,10 @@ class CFactorSMT(CFactorsByInstru):
         adj_minb_data["smart_idx"] = self.cal_smart_idx(adj_minb_data, ret="freq_ret", vol="vol")
         adj_minb_data = adj_minb_data.sort_values(by=["trade_date", "smart_idx"], ascending=[True, False])
         concat_factor_data = adj_minb_data.groupby(by="trade_date", group_keys=False).apply(self.cal_by_trade_date)
+        for lbd, name_lbd in zip(self.cfg.lbds, self.cfg.names_lbd):
+            for win in self.cfg.wins:
+                name_vanilla = self.cfg.name_vanilla(win, lbd)
+                concat_factor_data[name_vanilla] = concat_factor_data[name_lbd].rolling(window=win).mean()
         input_data = pd.merge(
             left=adj_major_data,
             right=concat_factor_data,
@@ -549,25 +555,25 @@ class CFactorSPDWEB(CFactorsByInstru):
     def cal_spdweb(self, trade_date_data: pd.DataFrame) -> pd.Series:
         n = len(trade_date_data)
         res = {}
-        for lbd, name_vanilla in zip(self.cfg.lbds, self.cfg.names_vanilla):
+        for lbd, name_lbd in zip(self.cfg.lbds, self.cfg.names_lbd):
             k = max(int(n * lbd), 1)
             its = trade_date_data.head(k)["trd_senti"].mean()
             uts = trade_date_data.tail(k)["trd_senti"].mean()
-            res[name_vanilla] = its - uts
+            res[name_lbd] = its - uts
         return pd.Series(res)
 
     def cal_factor_by_instru(self, instru: str, bgn_date: str, stp_date: str, calendar: CCalendar) -> pd.DataFrame:
-        win_start_date = bgn_date
+        buffer_bgn_date = self.cfg.buffer_bgn_date(bgn_date, calendar)
 
         # load adj major data as header
         adj_data = self.load_preprocess(
-            instru, bgn_date=win_start_date, stp_date=stp_date,
+            instru, bgn_date=buffer_bgn_date, stp_date=stp_date,
             values=["trade_date", "ticker_major", "oi_instru"],
         )
 
         # load member
         pos_data = self.load_pos(
-            instru, bgn_date=win_start_date, stp_date=stp_date,
+            instru, bgn_date=buffer_bgn_date, stp_date=stp_date,
             values=[
                 "trade_date", "ts_code", "broker",
                 "vol", "long_hld", "long_chg", "short_hld", "short_chg",
@@ -584,6 +590,10 @@ class CFactorSPDWEB(CFactorsByInstru):
         cntrct_pos_data["trd_senti"] = cntrct_pos_data["dlt_chg"] / cntrct_pos_data["abs_chg_sum"]
         cntrct_pos_data = cntrct_pos_data.sort_values(by=["trade_date", "stat"], ascending=[True, False])
         res_df = cntrct_pos_data.groupby(by="trade_date").apply(self.cal_spdweb).reset_index()
+        for lbd, name_lbd in zip(self.cfg.lbds, self.cfg.names_lbd):
+            for win in self.cfg.wins:
+                name_vanilla = self.cfg.name_vanilla(win, lbd)
+                res_df[name_vanilla] = res_df[name_lbd].rolling(window=win).mean()
         adj_data = pd.merge(left=adj_data, right=res_df, on="trade_date", how="left")
         self.rename_ticker(adj_data)
         factor_data = self.get_factor_data(adj_data, bgn_date)
