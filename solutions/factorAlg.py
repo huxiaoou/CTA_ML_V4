@@ -9,6 +9,7 @@ from typedef import (
     CCfgFactorGrpRS, CCfgFactorGrpBASIS, CCfgFactorGrpTS,
     CCfgFactorGrpLIQUIDITY, CCfgFactorGrpSIZE, CCfgFactorGrpMF, CCfgFactorGrpJUMP,
     _CCfgFactorGrpWinLambda, CCfgFactorGrpCTP, CCfgFactorGrpCTR, CCfgFactorGrpCVP,
+    CCfgFactorGrpSMT, CCfgFactorGrpSPDWEB,
 )
 from solutions.factor import CFactorsByInstru
 
@@ -467,6 +468,128 @@ class CFactorCVP(__CFactorCORR):
         return factor_data
 
 
+class CFactorSMT(CFactorsByInstru):
+    def __init__(self, cfg: CCfgFactorGrpSMT, **kwargs):
+        self.cfg = cfg
+        super().__init__(factor_grp=cfg, **kwargs)
+
+    @staticmethod
+    def cal_smart_idx(data: pd.DataFrame, ret: str, vol: str) -> pd.Series:
+        return data[[ret, vol]].apply(lambda z: np.abs(z[ret]) / np.log(z[vol]) * 1e4 if z[vol] > 1 else 0, axis=1)
+
+    @staticmethod
+    def cal_smt(sorted_sub_data: pd.DataFrame, lbd: float, prc: str, ret: str) -> tuple[float, float]:
+        # total price and ret
+        if (tot_amt_sum := sorted_sub_data["amount"].sum()) > 0:
+            tot_w = sorted_sub_data["amount"] / tot_amt_sum
+            tot_prc = sorted_sub_data[prc] @ tot_w
+            tot_ret = sorted_sub_data[ret] @ tot_w
+        else:
+            return np.nan, np.nan
+
+        # select smart data from total
+        volume_threshold = sorted_sub_data["vol"].sum() * lbd
+        n = sum(sorted_sub_data["vol"].cumsum() < volume_threshold) + 1
+        smt_df = sorted_sub_data.head(n)
+
+        # smart price and ret
+        if (smt_amt_sum := smt_df["amount"].sum()) > 0:
+            smt_w = smt_df["amount"] / smt_amt_sum
+            smt_prc = smt_df[prc] @ smt_w
+            smt_ret = smt_df[ret] @ smt_w
+            smt_p = ((smt_prc / tot_prc - 1) * 1e4) if tot_prc > 0 else 0
+            smt_r = (smt_ret - tot_ret) * 1e4 if not np.isinf(tot_ret) else 0
+            return smt_p, smt_r
+        else:
+            return np.nan, np.nan
+
+    def cal_by_trade_date(self, trade_date_data: pd.DataFrame) -> pd.Series:
+        res = {}
+        for lbd, name_vanilla in zip(self.cfg.lbds, self.cfg.names_vanilla):
+            smt_p, smt_r = self.cal_smt(trade_date_data, lbd=lbd, prc="vwap", ret="freq_ret")
+            res[name_vanilla], _ = smt_p, smt_r
+        return pd.Series(res)
+
+    def cal_factor_by_instru(
+            self, instru: str, bgn_date: str, stp_date: str, calendar: CCalendar
+    ) -> pd.DataFrame:
+        adj_major_data = self.load_preprocess(
+            instru, bgn_date=bgn_date, stp_date=stp_date,
+            values=["trade_date", "ticker_major"],
+        )
+        adj_minb_data = self.load_minute_bar(instru, bgn_date=bgn_date, stp_date=stp_date)
+        adj_minb_data["freq_ret"] = robust_ret_alg(adj_minb_data["close"], adj_minb_data["pre_close"])
+        adj_minb_data["freq_ret"] = adj_minb_data["freq_ret"].fillna(0)
+
+        # contract multiplier is not considered when calculating "vwap"
+        # because a price ratio is considered in the final results, not an absolute value of price is considered
+        adj_minb_data["vwap"] = (adj_minb_data["amount"] / adj_minb_data["vol"]).ffill()
+
+        # smart idx
+        adj_minb_data["smart_idx"] = self.cal_smart_idx(adj_minb_data, ret="freq_ret", vol="vol")
+        adj_minb_data = adj_minb_data.sort_values(by=["trade_date", "smart_idx"], ascending=[True, False])
+        concat_factor_data = adj_minb_data.groupby(by="trade_date", group_keys=False).apply(self.cal_by_trade_date)
+        input_data = pd.merge(
+            left=adj_major_data,
+            right=concat_factor_data,
+            left_on="trade_date",
+            right_index=True,
+            how="left",
+        )
+        self.rename_ticker(input_data)
+        factor_data = self.get_factor_data(input_data, bgn_date=bgn_date)
+        return factor_data
+
+
+class CFactorSPDWEB(CFactorsByInstru):
+    def __init__(self, cfg: CCfgFactorGrpSPDWEB, **kwargs):
+        self.cfg = cfg
+        super().__init__(factor_grp=cfg, **kwargs)
+
+    def cal_spdweb(self, trade_date_data: pd.DataFrame) -> pd.Series:
+        n = len(trade_date_data)
+        res = {}
+        for lbd, name_vanilla in zip(self.cfg.lbds, self.cfg.names_vanilla):
+            k = max(int(n * lbd), 1)
+            its = trade_date_data.head(k)["trd_senti"].mean()
+            uts = trade_date_data.tail(k)["trd_senti"].mean()
+            res[name_vanilla] = its - uts
+        return pd.Series(res)
+
+    def cal_factor_by_instru(self, instru: str, bgn_date: str, stp_date: str, calendar: CCalendar) -> pd.DataFrame:
+        win_start_date = bgn_date
+
+        # load adj major data as header
+        adj_data = self.load_preprocess(
+            instru, bgn_date=win_start_date, stp_date=stp_date,
+            values=["trade_date", "ticker_major", "oi_instru"],
+        )
+
+        # load member
+        pos_data = self.load_pos(
+            instru, bgn_date=win_start_date, stp_date=stp_date,
+            values=[
+                "trade_date", "ts_code", "broker",
+                "vol", "long_hld", "long_chg", "short_hld", "short_chg",
+                "code_type"
+            ]
+        )
+
+        cntrct_pos_data = pos_data.query("code_type == 0 and long_hld > 50 and short_hld > 50").dropna(
+            axis=0, how="any", subset=["vol", "long_hld", "long_chg", "short_hld", "short_chg"],
+        )
+        cntrct_pos_data["stat"] = (cntrct_pos_data["long_hld"] + cntrct_pos_data["short_hld"]) / cntrct_pos_data["vol"]
+        cntrct_pos_data["abs_chg_sum"] = cntrct_pos_data["long_chg"].abs() + cntrct_pos_data["short_chg"].abs()
+        cntrct_pos_data["dlt_chg"] = cntrct_pos_data["long_chg"] - cntrct_pos_data["short_chg"]
+        cntrct_pos_data["trd_senti"] = cntrct_pos_data["dlt_chg"] / cntrct_pos_data["abs_chg_sum"]
+        cntrct_pos_data = cntrct_pos_data.sort_values(by=["trade_date", "stat"], ascending=[True, False])
+        res_df = cntrct_pos_data.groupby(by="trade_date").apply(self.cal_spdweb).reset_index()
+        adj_data = pd.merge(left=adj_data, right=res_df, on="trade_date", how="left")
+        self.rename_ticker(adj_data)
+        factor_data = self.get_factor_data(adj_data, bgn_date)
+        return factor_data
+
+
 """
 ---------------------------------------------------
 Part III: pick factor
@@ -481,6 +604,7 @@ def pick_factor(
         universe: TUniverse,
         preprocess: CDbStruct,
         minute_bar: CDbStruct,
+        db_struct_pos: CDbStruct,
 ) -> tuple[CFactorsByInstru, CCfgFactorGrp]:
     if fclass == TFactorClass.MTM:
         cfg = cfg_factors.MTM
@@ -588,6 +712,24 @@ def pick_factor(
             universe=universe,
             db_struct_preprocess=preprocess,
             db_struct_minute_bar=minute_bar,
+        )
+    elif fclass == TFactorClass.SMT:
+        cfg = cfg_factors.SMT
+        fac = CFactorSMT(
+            cfg=cfg,
+            factors_by_instru_dir=factors_by_instru_dir,
+            universe=universe,
+            db_struct_preprocess=preprocess,
+            db_struct_minute_bar=minute_bar,
+        )
+    elif fclass == TFactorClass.SPDWEB:
+        cfg = cfg_factors.SPDWEB
+        fac = CFactorSPDWEB(
+            cfg=cfg,
+            factors_by_instru_dir=factors_by_instru_dir,
+            universe=universe,
+            db_struct_preprocess=preprocess,
+            db_struct_pos=db_struct_pos,
         )
     else:
         raise NotImplementedError(f"Invalid fclass = {fclass}")

@@ -82,6 +82,8 @@ class TFactorClass(StrEnum):
     CTP = "CTP"
     CTR = "CTR"
     CVP = "CVP"
+    SMT = "SMT"
+    SPDWEB = "SPDWEB"
 
 
 TFactorName = NewType("TFactorName", str)
@@ -188,6 +190,27 @@ class _CCfgFactorGrpWinLambda(CCfgFactorGrp):
     @property
     def factor_names(self) -> TFactorNames:
         return [self.factor_name(w, l) for w, l in product(self.wins, self.lbds)]
+
+
+@dataclass(frozen=True)
+class _CCfgFactorGrpLambda(CCfgFactorGrp):
+    lbds: list[float]
+
+    # --- name
+    def name_vanilla(self, lbd: float) -> TFactorName:
+        return TFactorName(f"{self.factor_class}L{int(lbd * 100):02d}")
+
+    def factor_name(self, lbd: float) -> TFactorName:
+        return self.name_vanilla(lbd)
+
+    # --- names
+    @property
+    def names_vanilla(self) -> TFactorNames:
+        return [self.name_vanilla(lbd) for lbd in self.lbds]
+
+    @property
+    def factor_names(self) -> TFactorNames:
+        return [self.factor_name(lbd) for lbd in self.lbds]
 
 
 """
@@ -324,6 +347,18 @@ class CCfgFactorGrpCVP(_CCfgFactorGrpWinLambda):
         return TFactorClass.CVP
 
 
+class CCfgFactorGrpSMT(_CCfgFactorGrpLambda):
+    @property
+    def factor_class(self) -> TFactorClass:
+        return TFactorClass.SMT
+
+
+class CCfgFactorGrpSPDWEB(_CCfgFactorGrpLambda):
+    @property
+    def factor_class(self) -> TFactorClass:
+        return TFactorClass.SPDWEB
+
+
 @dataclass(frozen=True)
 class CCfgFactors:
     MTM: CCfgFactorGrpMTM
@@ -339,6 +374,8 @@ class CCfgFactors:
     CTP: CCfgFactorGrpCTP
     CTR: CCfgFactorGrpCTR
     CVP: CCfgFactorGrpCVP
+    SMT: CCfgFactorGrpSMT
+    SPDWEB: CCfgFactorGrpSPDWEB
 
     @property
     def classes(self) -> list[str]:

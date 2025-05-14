@@ -11,6 +11,7 @@ from typedef import (
     CCfgFactorGrpRS, CCfgFactorGrpBASIS, CCfgFactorGrpTS,
     CCfgFactorGrpLIQUIDITY, CCfgFactorGrpSIZE, CCfgFactorGrpMF, CCfgFactorGrpJUMP,
     CCfgFactorGrpCTP, CCfgFactorGrpCTR, CCfgFactorGrpCVP,
+    CCfgFactorGrpSMT, CCfgFactorGrpSPDWEB,
 )
 
 # ---------- project configuration ----------
@@ -76,7 +77,7 @@ db_struct_cfg = CCfgDbStruct(
         table=CSqlTable(cfg=_db_struct["fmd"]["table"]),
     ),
     position=CDbStruct(
-        db_save_dir=proj_cfg.root_dir,
+        db_save_dir=proj_cfg.by_instru_pos_dir,
         db_name=_db_struct["position"]["db_name"],
         table=CSqlTable(cfg=_db_struct["position"]["table"]),
     ),
@@ -117,6 +118,8 @@ cfg_factors = CCfgFactors(
     CTP=CCfgFactorGrpCTP(**proj_cfg.factors["CTP"]),
     CTR=CCfgFactorGrpCTR(**proj_cfg.factors["CTR"]),
     CVP=CCfgFactorGrpCVP(**proj_cfg.factors["CVP"]),
+    SMT=CCfgFactorGrpSMT(**proj_cfg.factors["SMT"]),
+    SPDWEB=CCfgFactorGrpSPDWEB(**proj_cfg.factors["SPDWEB"]),
 )
 
 if __name__ == "__main__":
