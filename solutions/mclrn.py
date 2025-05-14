@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from loguru import logger
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.linear_model import LinearRegression, Ridge, LogisticRegression
+from sklearn.neural_network import MLPClassifier
 from solutions.mclrn_custom import BaseLine
 import lightgbm as lgb
 import xgboost as xgb
@@ -154,27 +155,27 @@ class CTestMclrn:
         pass
 
     def get_fit_params(self, test_x: pd.DataFrame, test_y: pd.Series) -> dict:
-        if self.test_model.early_stopping > 0:
-            return {
-                "eval_set": [[test_x, test_y]]
-            }
-        else:
-            return {}
+        return {"eval_set": [[test_x, test_y]]}
 
     def fit_estimator(self, x: pd.DataFrame, y: pd.Series):
         if self.test_model.hyper_param_grids:
-            x_trn, x_val, y_trn, y_val = train_test_split(
-                x, y, test_size=0.1, random_state=self.RANDOM_STATE, shuffle=False,
-            )
-            fit_params = self.get_fit_params(x_val, y_val)
             grid_cv_seeker = GridSearchCV(
                 self.prototype,
                 self.test_model.hyper_param_grids,
                 cv=self.test_model.cv,
             )
-            self.fitted_estimator = grid_cv_seeker.fit(x_trn, y_trn, **fit_params)
-            self.trn_score = self.fitted_estimator.score(x_trn, y_trn)
-            self.val_score = self.fitted_estimator.score(x_val, y_val)
+            if self.test_model.early_stopping > 0:
+                x_trn, x_val, y_trn, y_val = train_test_split(
+                    x, y, test_size=0.1, random_state=self.RANDOM_STATE, shuffle=False,
+                )
+                fit_params = self.get_fit_params(x_val, y_val)
+                self.fitted_estimator = grid_cv_seeker.fit(x_trn, y_trn, **fit_params)
+                self.trn_score = self.fitted_estimator.score(x_trn, y_trn)
+                self.val_score = self.fitted_estimator.score(x_val, y_val)
+            else:
+                self.fitted_estimator = grid_cv_seeker.fit(x, y)
+                self.trn_score = self.fitted_estimator.score(x, y)
+                self.val_score = self.fitted_estimator.score(x, y)
         else:
             fit_params = self.get_fit_params(x, y)
             self.fitted_estimator = self.prototype.fit(x, y, **fit_params)
@@ -201,20 +202,6 @@ class CTestMclrn:
         if os.path.exists(model_path):
             untrusted_types = sio.get_untrusted_types(file=model_path)
             self.fitted_estimator = sio.load(model_path, trusted=untrusted_types)
-            # trusted=[
-            #     "collections.defaultdict",
-            #     "collections.OrderedDict",
-            #     "solutions.mclrn_custom.BaseLine",
-            #     "lightgbm.basic.Booster", "lightgbm.sklearn.LGBMRegressor", "lightgbm.sklearn.LGBMClassifier",
-            #     "xgboost.core.Booster", "xgboost.sklearn.XGBRegressor", "xgboost.sklearn.XGBClassifier",
-            #     "sklearn.metrics._scorer._PassthroughScorer",
-            #     "sklearn.utils._metadata_requests.MetadataRequest",
-            #     "sklearn.utils._metadata_requests.MethodMetadataRequest",
-            #     'builtins.object', 'numpy.dtype', 'pandas._libs.index.ObjectEngine',
-            #     'pandas._libs.internals.BlockValuesRefs', 'pandas.core.indexes.base.Index',
-            #     'pandas.core.internals.managers.SingleBlockManager', 'pandas.core.series.Series'
-            # ],
-            # )
             return True
         else:
             if verbose:
@@ -397,6 +384,24 @@ class CTestMclrnLogistic(CTestMclrn):
         c = self.fitted_estimator.best_estimator_.C
         text = f"{self.save_id:<52s}| " \
                f"C = {c:>5.2f} | " \
+               f"score = [{self.trn_score:>7.4f}]/[{self.val_score:>7.4f}]"
+        logger.info(text)
+
+
+class CTestMclrnMlp(CTestMclrn):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.prototype = MLPClassifier(
+            random_state=self.RANDOM_STATE,
+            max_iter=1000,
+        )
+
+    def display_fitted_estimator(self) -> None:
+        alpha = self.fitted_estimator.best_estimator_.alpha
+        layers = self.fitted_estimator.best_estimator_.hidden_layer_sizes
+        text = f"{self.save_id:<52s}| " \
+               f"layers = {layers} | " \
+               f"alpha = {alpha:>6.4f} | " \
                f"score = [{self.trn_score:>7.4f}]/[{self.val_score:>7.4f}]"
         logger.info(text)
 

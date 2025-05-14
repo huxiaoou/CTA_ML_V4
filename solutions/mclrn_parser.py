@@ -6,7 +6,7 @@ from husfort.qutility import SFG, SFY
 from husfort.qutility import check_and_mkdir
 from solutions.mclrn import (
     CTestMclrn, CTestMclrnBaseLine,
-    CTestMclrnLinear, CTestMclrnRidge, CTestMclrnLogistic,
+    CTestMclrnLinear, CTestMclrnRidge, CTestMclrnLogistic, CTestMclrnMlp,
     CTestMclrnLGBM, CTestMclrnXGB,
 )
 from typedef import (CTestData, CTestModel, TRets, CRet, TFacUnvrsOpts,
@@ -91,6 +91,7 @@ def parse_config_to_mclrn_test(
         TModelType.LINEAR: CTestMclrnLinear,
         TModelType.RIDGE: CTestMclrnRidge,
         TModelType.LOGISTIC: CTestMclrnLogistic,
+        TModelType.MLP: CTestMclrnMlp,
         TModelType.LGBM: CTestMclrnLGBM,
         TModelType.XGB: CTestMclrnXGB,
     }
