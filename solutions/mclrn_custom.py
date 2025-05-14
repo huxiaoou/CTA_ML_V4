@@ -43,5 +43,6 @@ class BaseLine:
             sd = ic.std()
             coe = mu / sd.where(sd > 0, np.nan)
         else:
-            coe = mu
+            scale = np.sqrt(mu.abs())
+            coe = mu / scale.where(scale > 0, np.nan)
         return BaseLineEstimator(coe=coe.fillna(0))

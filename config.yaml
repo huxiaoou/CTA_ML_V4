@@ -272,20 +272,6 @@ test_models:
     cv: 0
     early_stopping: 0
     hyper_param_grids:
-  - model_type: BASELINE
-    trn_win: 120
-    using_instru: false
-    classification: false
-    cv: 0
-    early_stopping: 0
-    hyper_param_grids:
-  - model_type: BASELINE
-    trn_win: 60
-    using_instru: false
-    classification: false
-    cv: 0
-    early_stopping: 0
-    hyper_param_grids:
 #  - model_type: LINEAR
 #    trn_win: 240
 #    using_instru: false
