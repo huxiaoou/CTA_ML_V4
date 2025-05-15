@@ -207,12 +207,15 @@ class CTestMclrn:
             return False
 
     def apply_estimator(self, x: pd.DataFrame) -> np.ndarray:
-        pred = self.fitted_estimator.predict(X=x)
+        if self.test_model.classification:
+            prob = self.fitted_estimator.predict_proba(X=x)
+            idx = np.where(self.fitted_estimator.classes_ == 1)[0][0]
+            pred = prob[:, idx] - 0.50
+        else:
+            pred = self.fitted_estimator.predict(X=x)
         return pred
 
     def get_y_h(self, pred: np.ndarray, idx: pd.Index) -> pd.Series:
-        if self.test_model.classification:
-            pred = pred * 2 - 1  # (0, 1) ->(-1, 1)
         return pd.Series(data=pred, name=self.y_col, index=idx).astype(np.float64)
 
     def train(self, model_update_day: str, calendar: CCalendar, verbose: bool):
