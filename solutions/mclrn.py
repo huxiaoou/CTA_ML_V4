@@ -479,8 +479,8 @@ def main_train_and_predict(
     ]
     if call_multiprocess:
         mul_process_for_tasks(tasks=tasks, processes=processes, callback_log=lambda s: logger.info(s),
-                              seconds_between_check=0.50)
+                              seconds_between_check=0.01)
     else:
         uni_process_for_tasks(tasks=tasks, callback_log=lambda s: logger.info(s),
-                              seconds_between_check=0.50)
+                              seconds_between_check=0.01)
     return 0
