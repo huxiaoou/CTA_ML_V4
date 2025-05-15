@@ -172,8 +172,8 @@ class CTestMclrn:
                 x_trn, x_val, y_trn, y_val = x, x, y, y
             fit_params = self.get_fit_params(x_val, y_val)
             self.fitted_estimator = grid_cv_seeker.fit(x_trn, y_trn, **fit_params)
-            self.trn_score = self.fitted_estimator.score(x_trn, y_trn)
-            self.val_score = self.fitted_estimator.score(x_val, y_val)
+            self.trn_score = self.fitted_estimator.score(x_trn, y_trn)  # type: ignore
+            self.val_score = self.fitted_estimator.score(x_val, y_val)  # type: ignore
         else:
             fit_params = self.get_fit_params(x, y)
             self.fitted_estimator = self.prototype.fit(x, y, **fit_params)
@@ -478,9 +478,7 @@ def main_train_and_predict(
         for test in tests
     ]
     if call_multiprocess:
-        mul_process_for_tasks(tasks=tasks, processes=processes, callback_log=lambda s: logger.info(s),
-                              seconds_between_check=0.01)
+        mul_process_for_tasks(tasks=tasks, processes=processes, callback_log=lambda s: logger.info(s))
     else:
-        uni_process_for_tasks(tasks=tasks, callback_log=lambda s: logger.info(s),
-                              seconds_between_check=0.01)
+        uni_process_for_tasks(tasks=tasks, callback_log=lambda s: logger.info(s))
     return 0
