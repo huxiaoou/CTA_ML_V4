@@ -210,11 +210,11 @@ factors:
     wins: [ 60, 120, 180 ]
     lbds: [ 0.5, 0.9, 0.95 ]
   SMT:
-    wins: [ 1, 3, 5, 8 ]
+    wins: [ 1, 3, 5 ]
     lbds: [ 0.2, 0.5, 0.8 ]
   SPDWEB:
-    wins: [ 1, 3, 5, 8 ]
-    lbds: [ 0.2, 0.4, 0.5 ]
+    wins: [ 1, 3, 5 ]
+    lbds: [ 0.1, 0.2, 0.4 ]
 
 # ------- factors universe -------
 factors_universe_options:
@@ -231,6 +231,7 @@ factors_universe_options:
       - [ CTP, CTP060L95 ]
       - [ CVP, CVP060L95 ]
       - [ SIZE, SIZEDIF ]
+      - [ SPDWEB, SPDWEB001L10 ]
     Cls:
       - [ MTM, MTMDIF ]
       - [ SKEW, SKEW120 ]
@@ -256,6 +257,7 @@ factors_universe_options:
       - [ CTP, CTP120L95 ]
       - [ CVP, CVP120L95 ]
       - [ SIZE, SIZEDIF ]
+      - [ SPDWEB, SPDWEB001L10 ]
     Cls:
       - [ MTM, MTMDIF ]
       - [ SKEW, SKEW020D ]
