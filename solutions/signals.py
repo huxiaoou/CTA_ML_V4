@@ -85,10 +85,12 @@ class CSignalsFromPrdct(CSignalsLoader):
         """
 
         def __convert_prd_to_wgt(x: pd.Series) -> pd.Series:
-            s = np.sign(x)
+            k = len(x)
+            k0, d = k // 2, k % 2
+            s = np.array([1] * k0 + [0] * d + [-1] * k0)
             abs_sum = np.abs(s).sum()
             w = (s / abs_sum) if abs_sum > 0 else 0
-            return pd.Series(data=w, index=x.index)
+            return pd.Series(data=w, index=x.sort_values(ascending=False).index)
 
         weights = prediction.groupby(by="trade_date")[self.test.test_data.ret.ret_name].apply(__convert_prd_to_wgt)
         prediction["weight"] = weights.reset_index(level="trade_date", drop=True)
