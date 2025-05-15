@@ -84,6 +84,7 @@ class TFactorClass(StrEnum):
     CVP = "CVP"
     SMT = "SMT"
     SPDWEB = "SPDWEB"
+    ACR = "ACR"
 
 
 TFactorName = NewType("TFactorName", str)
@@ -370,6 +371,29 @@ class CCfgFactorGrpSPDWEB(_CCfgFactorGrpWinLambda):
         return TFactorClass.SPDWEB
 
 
+class CCfgFactorGrpACR(_CCfgFactorGrpWin):
+    @property
+    def factor_class(self) -> TFactorClass:
+        return TFactorClass.ACR
+
+    @property
+    def vars_to_cal(self) -> list[str]:
+        return ["simple", "vol"]
+
+    def name_acr(self, var_to_cal: str) -> TFactorName:
+        return TFactorName(f"{self.factor_class}{var_to_cal}")
+
+    def name_x(self, win: int, var_to_cal: str) -> TFactorName:
+        return TFactorName(f"{self.factor_class}{win:03d}{var_to_cal}")
+
+    @property
+    def factor_names(self) -> TFactorNames:
+        return [
+            self.name_x(win, var_to_cal)
+            for var_to_cal, win in product(self.vars_to_cal, self.wins)
+        ]
+
+
 @dataclass(frozen=True)
 class CCfgFactors:
     MTM: CCfgFactorGrpMTM
@@ -387,6 +411,7 @@ class CCfgFactors:
     CVP: CCfgFactorGrpCVP
     SMT: CCfgFactorGrpSMT
     SPDWEB: CCfgFactorGrpSPDWEB
+    ACR: CCfgFactorGrpACR
 
     @property
     def classes(self) -> list[str]:

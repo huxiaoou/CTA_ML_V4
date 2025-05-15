@@ -215,6 +215,8 @@ factors:
   SPDWEB:
     wins: [ 1, 3, 5 ]
     lbds: [ 0.1, 0.2, 0.4 ]
+  ACR:
+    wins: [ 5, 8, 13, 21 ]
 
 # ------- factors universe -------
 factors_universe_options:
