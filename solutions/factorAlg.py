@@ -81,24 +81,26 @@ def auto_weight_sum(x: pd.Series) -> float:
     return x @ weight
 
 
-def robust_ret_alg(x: pd.Series, y: pd.Series) -> pd.Series:
+def robust_ret_alg(x: pd.Series, y: pd.Series, scale: float = 1.0) -> pd.Series:
     """
 
     :param x: must have the same length as y
     :param y:
+    :param scale: return scale
     :return:
     """
-    return x / y.where(y != 0, np.nan) - 1
+    return (x / y.where(y != 0, np.nan) - 1) * scale
 
 
-def robust_ret_log(x: pd.Series, y: pd.Series) -> pd.Series:
+def robust_ret_log(x: pd.Series, y: pd.Series, scale: float = 1.0) -> pd.Series:
     """
 
     :param x: must have the same length as y
     :param y:
+    :param scale:
     :return: for log return, x, y are supposed to be positive
     """
-    return np.log(x.where(x > 0, np.nan) / y.where(y > 0, np.nan))
+    return (np.log(x.where(x > 0, np.nan) / y.where(y > 0, np.nan))) * scale
 
 
 """
@@ -308,7 +310,7 @@ class CFactorMF(CFactorsByInstru):
     @staticmethod
     def cal_mf(tday_minb_data: pd.DataFrame, money: str, ret: str) -> float:
         wgt = tday_minb_data[money] / tday_minb_data[money].sum()
-        sgn = tday_minb_data[ret].fillna(0) * 1e4
+        sgn = tday_minb_data[ret].fillna(0)
         mf = -wgt @ sgn
         return mf
 
@@ -319,7 +321,7 @@ class CFactorMF(CFactorsByInstru):
             values=["trade_date", "ticker_major", "vol_major", "return_c_major"],
         )
         minb_data = self.load_minute_bar(instru, bgn_date=buffer_bgn_date, stp_date=stp_date)
-        minb_data["freq_ret"] = robust_ret_alg(minb_data["close"], minb_data["pre_close"])
+        minb_data["freq_ret"] = robust_ret_alg(minb_data["close"], minb_data["pre_close"], scale=1e4)
         mf_data = minb_data.groupby(by="trade_date").apply(self.cal_mf, money="amount", ret="freq_ret")
         input_data = pd.merge(
             left=major_data,
@@ -357,8 +359,8 @@ class CFactorJUMP(CFactorsByInstru):
             values=["trade_date", "ticker_major", "vol_major", "return_c_major"],
         )
         minb_data = self.load_minute_bar(instru, bgn_date=buffer_bgn_date, stp_date=stp_date)
-        minb_data["simple"] = robust_ret_alg(minb_data["close"], minb_data["pre_close"]) * 1e4
-        minb_data["compound"] = robust_ret_log(minb_data["close"], minb_data["pre_close"]) * 1e4
+        minb_data["simple"] = robust_ret_alg(minb_data["close"], minb_data["pre_close"], scale=1e4)
+        minb_data["compound"] = robust_ret_log(minb_data["close"], minb_data["pre_close"], scale=1e4)
         jump_data = minb_data.groupby(by="trade_date").apply(
             self.cal_jump, simple="simple", compound="compound",
         )
@@ -456,7 +458,7 @@ class CFactorCVP(__CFactorCORR):
         )
         adj_data = adj_data.set_index("trade_date")
         minb_data = self.load_minute_bar(instru, bgn_date=buffer_bgn_date, stp_date=stp_date)
-        minb_data["simple"] = robust_ret_alg(minb_data["close"], minb_data["pre_close"]) * 1e4
+        minb_data["simple"] = robust_ret_alg(minb_data["close"], minb_data["pre_close"], scale=1e4)
         adj_data["vol"] = minb_data.groupby(by="trade_date")["simple"].apply(lambda z: z.std())
         x, y = "vol", "closeI"
         self.cal_core(
@@ -624,7 +626,7 @@ class CFactorACR(CFactorsByInstru):
         )
         major_data = major_data.set_index("trade_date")
         minb_data = self.load_minute_bar(instru, bgn_date=buffer_bgn_date, stp_date=stp_date)
-        minb_data["simple"] = robust_ret_alg(minb_data["close"], minb_data["pre_close"]) * 1e4
+        minb_data["simple"] = robust_ret_alg(minb_data["close"], minb_data["pre_close"], scale=1e4)
         acr_data: pd.DataFrame = minb_data.groupby(by="trade_date").apply(self.cal_acr)
         input_data = pd.merge(
             left=major_data,
@@ -653,7 +655,7 @@ class CFactorIDV(CFactorsByInstru):
         )
         major_data = major_data.set_index("trade_date")
         minb_data = self.load_minute_bar(instru, bgn_date=buffer_bgn_date, stp_date=stp_date)
-        minb_data["simple"] = robust_ret_alg(minb_data["close"], minb_data["pre_close"]) * 1e4
+        minb_data["simple"] = robust_ret_alg(minb_data["close"], minb_data["pre_close"], scale=1e4)
         major_data["vol"] = minb_data.groupby(by="trade_date")["simple"].apply(lambda z: z.std())
         for win, name_vanilla in zip(self.cfg.wins, self.cfg.names_vanilla):
             mu = major_data["vol"].rolling(window=win).mean()
