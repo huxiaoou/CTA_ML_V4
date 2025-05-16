@@ -85,6 +85,7 @@ class TFactorClass(StrEnum):
     SMT = "SMT"
     SPDWEB = "SPDWEB"
     ACR = "ACR"
+    IDV = "IDV"
 
 
 TFactorName = NewType("TFactorName", str)
@@ -394,6 +395,16 @@ class CCfgFactorGrpACR(_CCfgFactorGrpWin):
         ]
 
 
+class CCfgFactorGrpIDV(_CCfgFactorGrpWin):
+    @property
+    def factor_class(self) -> TFactorClass:
+        return TFactorClass.IDV
+
+    @property
+    def factor_names(self) -> TFactorNames:
+        return self.names_vanilla + self.names_diff
+
+
 @dataclass(frozen=True)
 class CCfgFactors:
     MTM: CCfgFactorGrpMTM
@@ -412,6 +423,7 @@ class CCfgFactors:
     SMT: CCfgFactorGrpSMT
     SPDWEB: CCfgFactorGrpSPDWEB
     ACR: CCfgFactorGrpACR
+    IDV: CCfgFactorGrpIDV
 
     @property
     def classes(self) -> list[str]:

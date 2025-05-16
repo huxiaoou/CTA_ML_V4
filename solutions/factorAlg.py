@@ -9,7 +9,7 @@ from typedef import (
     CCfgFactorGrpRS, CCfgFactorGrpBASIS, CCfgFactorGrpTS,
     CCfgFactorGrpLIQUIDITY, CCfgFactorGrpSIZE, CCfgFactorGrpMF, CCfgFactorGrpJUMP,
     _CCfgFactorGrpWinLambda, CCfgFactorGrpCTP, CCfgFactorGrpCTR, CCfgFactorGrpCVP,
-    CCfgFactorGrpSMT, CCfgFactorGrpSPDWEB, CCfgFactorGrpACR,
+    CCfgFactorGrpSMT, CCfgFactorGrpSPDWEB, CCfgFactorGrpACR, CCfgFactorGrpIDV,
 )
 from solutions.factor import CFactorsByInstru
 
@@ -640,6 +640,33 @@ class CFactorACR(CFactorsByInstru):
         return factor_data
 
 
+class CFactorIDV(CFactorsByInstru):
+    def __init__(self, cfg: CCfgFactorGrpIDV, **kwargs):
+        self.cfg = cfg
+        super().__init__(factor_grp=cfg, **kwargs)
+
+    def cal_factor_by_instru(self, instru: str, bgn_date: str, stp_date: str, calendar: CCalendar) -> pd.DataFrame:
+        buffer_bgn_date = self.cfg.buffer_bgn_date(bgn_date, calendar)
+        major_data = self.load_preprocess(
+            instru, bgn_date=buffer_bgn_date, stp_date=stp_date,
+            values=["trade_date", "ticker_major", "return_c_major"],
+        )
+        major_data = major_data.set_index("trade_date")
+        minb_data = self.load_minute_bar(instru, bgn_date=buffer_bgn_date, stp_date=stp_date)
+        minb_data["simple"] = robust_ret_alg(minb_data["close"], minb_data["pre_close"]) * 1e4
+        major_data["vol"] = minb_data.groupby(by="trade_date")["simple"].apply(lambda z: z.std())
+        for win, name_vanilla in zip(self.cfg.wins, self.cfg.names_vanilla):
+            mu = major_data["vol"].rolling(window=win).mean()
+            sd = major_data["vol"].rolling(window=win).std()
+            major_data[name_vanilla] = -((major_data["vol"] - mu) / sd.where(sd > 0, np.nan)).fillna(0)
+        n0, n1 = self.cfg.name_vanilla(55), self.cfg.name_vanilla(8)
+        major_data[self.cfg.name_diff()] = major_data[n0] - major_data[n1]
+        major_data = major_data.reset_index()
+        self.rename_ticker(major_data)
+        factor_data = self.get_factor_data(major_data, bgn_date=bgn_date)
+        return factor_data
+
+
 """
 ---------------------------------------------------
 Part III: pick factor
@@ -784,6 +811,15 @@ def pick_factor(
     elif fclass == TFactorClass.ACR:
         cfg = cfg_factors.ACR
         fac = CFactorACR(
+            cfg=cfg,
+            factors_by_instru_dir=factors_by_instru_dir,
+            universe=universe,
+            db_struct_preprocess=preprocess,
+            db_struct_minute_bar=minute_bar,
+        )
+    elif fclass == TFactorClass.IDV:
+        cfg = cfg_factors.IDV
+        fac = CFactorIDV(
             cfg=cfg,
             factors_by_instru_dir=factors_by_instru_dir,
             universe=universe,

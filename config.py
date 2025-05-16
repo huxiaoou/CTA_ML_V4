@@ -11,7 +11,7 @@ from typedef import (
     CCfgFactorGrpRS, CCfgFactorGrpBASIS, CCfgFactorGrpTS,
     CCfgFactorGrpLIQUIDITY, CCfgFactorGrpSIZE, CCfgFactorGrpMF, CCfgFactorGrpJUMP,
     CCfgFactorGrpCTP, CCfgFactorGrpCTR, CCfgFactorGrpCVP,
-    CCfgFactorGrpSMT, CCfgFactorGrpSPDWEB, CCfgFactorGrpACR,
+    CCfgFactorGrpSMT, CCfgFactorGrpSPDWEB, CCfgFactorGrpACR, CCfgFactorGrpIDV,
 )
 
 # ---------- project configuration ----------
@@ -121,6 +121,7 @@ cfg_factors = CCfgFactors(
     SMT=CCfgFactorGrpSMT(**proj_cfg.factors["SMT"]),
     SPDWEB=CCfgFactorGrpSPDWEB(**proj_cfg.factors["SPDWEB"]),
     ACR=CCfgFactorGrpACR(**proj_cfg.factors["ACR"]),
+    IDV=CCfgFactorGrpIDV(**proj_cfg.factors["IDV"]),
 )
 
 if __name__ == "__main__":

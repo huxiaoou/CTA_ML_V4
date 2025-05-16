@@ -217,6 +217,8 @@ factors:
     lbds: [ 0.1, 0.2, 0.4 ]
   ACR:
     wins: [ 5, 8, 13, 21 ]
+  IDV:
+    wins: [ 5, 8, 13, 21, 34, 55 ]
 
 # ------- factors universe -------
 factors_universe_options:
