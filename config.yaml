@@ -234,6 +234,7 @@ factors_universe_options:
       - [ CVP, CVP060L95 ]
       - [ SIZE, SIZEDIF ]
       - [ SPDWEB, SPDWEB001L10 ]
+      - [ ACR, ACR008vol ]
     Cls:
       - [ MTM, MTMDIF ]
       - [ SKEW, SKEW120 ]
@@ -246,6 +247,7 @@ factors_universe_options:
       - [ CTP, CTP060L95 ]
       - [ CVP, CVP060L95 ]
       - [ SIZE, SIZEDIF ]
+      - [ ACR, ACR008vol ]
   neu:
     Opn:
       - [ MTM, MTMDIF ]
@@ -260,6 +262,7 @@ factors_universe_options:
       - [ CVP, CVP120L95 ]
       - [ SIZE, SIZEDIF ]
       - [ SPDWEB, SPDWEB001L10 ]
+      - [ ACR, ACR008vol ]
     Cls:
       - [ MTM, MTMDIF ]
       - [ SKEW, SKEW020D ]
@@ -272,25 +275,26 @@ factors_universe_options:
       - [ CTP, CTP120L95 ]
       - [ CVP, CVP120L95 ]
       - [ SIZE, SIZEDIF ]
+      - [ ACR, ACR008vol ]
 
 # ------- models -------
 test_models:
   - model_type: BASELINE
-    trn_win: 60
+    trn_win: 240
     using_instru: false
     classification: false
     cv: 0
     early_stopping: 0
     hyper_param_grids:
   - model_type: LINEAR
-    trn_win: 60
+    trn_win: 240
     using_instru: false
     classification: false
     cv: 0
     early_stopping: 0
     hyper_param_grids:
   - model_type: RIDGE
-    trn_win: 60
+    trn_win: 240
     using_instru: false
     classification: false
     cv: 5
@@ -298,7 +302,7 @@ test_models:
     hyper_param_grids:
       alpha: [ 0.1, 1, 10 ]
   - model_type: LOGISTIC
-    trn_win: 60
+    trn_win: 240
     using_instru: false
     classification: true
     cv: 5
