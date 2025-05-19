@@ -5,7 +5,7 @@ $bgn_date_factor = "20140102"
 $bgn_date_mclrn = "20150105"
 $bgn_date_sig = "20151230" # must at least 2 days ahead of bgn date
 $bgn_date = "20160104"
-$stp_date = "20250401"
+$stp_date = "20250501"
 
 python main.py --bgn $bgn_date_avlb --stp $stp_date available
 python main.py --bgn $bgn_date_avlb --stp $stp_date market
