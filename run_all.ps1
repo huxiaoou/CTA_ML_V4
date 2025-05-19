@@ -5,7 +5,7 @@ $bgn_date_factor = "20140102"
 $bgn_date_mclrn = "20150105"
 $bgn_date_sig = "20151230" # must at least 2 days ahead of bgn date
 $bgn_date = "20160104"
-$stp_date = "20250401"
+$stp_date = "20250501"
 
 python main.py --bgn $bgn_date_avlb --stp $stp_date available
 python main.py --bgn $bgn_date_avlb --stp $stp_date market
@@ -20,8 +20,8 @@ python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass LIQUIDITY
 python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass SIZE
 python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass CTP
 python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass CVP
-python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass SMT
 python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass SPDWEB
+python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass ACR
 
 python main.py --bgn $bgn_date --stp $stp_date ic --fclass MTM
 python main.py --bgn $bgn_date --stp $stp_date ic --fclass SKEW
@@ -33,8 +33,8 @@ python main.py --bgn $bgn_date --stp $stp_date ic --fclass LIQUIDITY
 python main.py --bgn $bgn_date --stp $stp_date ic --fclass SIZE
 python main.py --bgn $bgn_date --stp $stp_date ic --fclass CTP
 python main.py --bgn $bgn_date --stp $stp_date ic --fclass CVP
-python main.py --bgn $bgn_date --stp $stp_date ic --fclass SMT
 python main.py --bgn $bgn_date --stp $stp_date ic --fclass SPDWEB
+python main.py --bgn $bgn_date --stp $stp_date ic --fclass ACR
 
 python main.py --bgn $bgn_date_mclrn --stp $stp_date mclrn
 python main.py --bgn $bgn_date_sig --stp $stp_date signals

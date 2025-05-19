@@ -87,7 +87,10 @@ class CSignalsFromPrdct(CSignalsLoader):
         def __convert_prd_to_wgt(x: pd.Series) -> pd.Series:
             k = len(x)
             k0, d = k // 2, k % 2
-            s = np.array([1] * k0 + [0] * d + [-1] * k0)
+            rou = np.power(1 / 2, 1 / (k0 - 1)) if k0 > 1 else 1
+            sgn = np.array([1] * k0 + [0] * d + [-1] * k0)
+            val = np.power(rou, list(range(k0)) + [k0] * d + list(range(k0 - 1, -1, -1)))
+            s = sgn * val
             abs_sum = np.abs(s).sum()
             w = (s / abs_sum) if abs_sum > 0 else 0
             return pd.Series(data=w, index=x.sort_values(ascending=False).index)
