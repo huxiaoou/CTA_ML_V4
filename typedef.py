@@ -303,7 +303,7 @@ class CCfgFactorGrpTS(_CCfgFactorGrpWin):
 
     @property
     def factor_names(self) -> TFactorNames:
-        return self.names_vanilla + self.names_res
+        return self.names_vanilla + self.names_res + self.names_diff
 
 
 class CCfgFactorGrpLIQUIDITY(_CCfgFactorGrpWin):
