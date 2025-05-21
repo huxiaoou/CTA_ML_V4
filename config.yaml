@@ -19,36 +19,36 @@ mkt_idxes:
   commodity: NH0100.NHF
 
 universe:
-  #  AU.SHF:
-  #    sectorL0: C
-  #    sectorL1: AUG
-  #  AG.SHF:
-  #    sectorL0: C
-  #    sectorL1: AUG
-  #  CU.SHF:
-  #    sectorL0: C
-  #    sectorL1: MTL
-  #  AL.SHF:
-  #    sectorL0: C
-  #    sectorL1: MTL
-  #  PB.SHF:
-  #    sectorL0: C
-  #    sectorL1: MTL
-  #  ZN.SHF:
-  #    sectorL0: C
-  #    sectorL1: MTL
-  #  NI.SHF:
-  #    sectorL0: C
-  #    sectorL1: MTL
-  #  SN.SHF:
-  #    sectorL0: C
-  #    sectorL1: MTL
-  #  SS.SHF:
-  #    sectorL0: C
-  #    sectorL1: MTL
-  #  AO.SHF:
-  #    sectorL0: C
-  #    sectorL1: MTL
+  AU.SHF:
+    sectorL0: C
+    sectorL1: AUG
+  AG.SHF:
+    sectorL0: C
+    sectorL1: AUG
+  CU.SHF:
+    sectorL0: C
+    sectorL1: MTL
+  AL.SHF:
+    sectorL0: C
+    sectorL1: MTL
+  PB.SHF:
+    sectorL0: C
+    sectorL1: MTL
+  ZN.SHF:
+    sectorL0: C
+    sectorL1: MTL
+  NI.SHF:
+    sectorL0: C
+    sectorL1: MTL
+  SN.SHF:
+    sectorL0: C
+    sectorL1: MTL
+  SS.SHF:
+    sectorL0: C
+    sectorL1: MTL
+  AO.SHF:
+    sectorL0: C
+    sectorL1: MTL
   A.DCE:
     sectorL0: C
     sectorL1: OIL
@@ -349,6 +349,6 @@ test_models:
 CONST:
   INIT_CASH: 100_000_000
   COST_RATE: 0.0003
-  #  SECTORS: [ "AUG", "MTL", "BLK", "OIL", "CHM", "AGR" ]
-  SECTORS: [ "BLK", "OIL", "CHM", "AGR" ]
+  SECTORS: [ "AUG", "MTL", "BLK", "OIL", "CHM", "AGR" ]
+  #  SECTORS: [ "BLK", "OIL", "CHM", "AGR" ]
   LAG: 1
