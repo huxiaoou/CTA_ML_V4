@@ -219,6 +219,8 @@ factors:
     wins: [ 5, 8, 13, 21 ]
   IDV:
     wins: [ 5, 8, 13, 21, 34, 55 ]
+  CNVG:
+    wins: [ 5, 10, 20, 60, 120 ]
 
 # ------- factors universe -------
 factors_universe_options:
