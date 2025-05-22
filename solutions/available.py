@@ -2,7 +2,8 @@ import pandas as pd
 from husfort.qutility import check_and_makedirs, qtimer
 from husfort.qcalendar import CCalendar
 from husfort.qsqlite import CDbStruct, CMgrSqlDb
-from typedef import TUniverse, CCfgAvlbUnvrs
+from typedefs.typedefInstrus import TUniverse
+from typedef import CCfgAvlbUnvrs
 
 
 def load_major(db_struct_instru: CDbStruct, bgn_date: str, stp_date: str) -> pd.DataFrame:

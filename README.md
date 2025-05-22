@@ -1,8 +1,8 @@
-# README
+# 1. README
 
-## data structure
+## 1.1. data structure
 
-### test_returns
+### 1.1.1. test_returns
 
 + test_returns_by_instru
     + opn
@@ -18,7 +18,7 @@
     + opn.db
     + cls.db
 
-### factors
+### 1.1.2. factors
 
 make sure the algorithm of each factor is symmetrical about 0
 
@@ -43,7 +43,7 @@ make sure the algorithm of each factor is symmetrical about 0
     + F3.db
     + ...
 
-### ic-tests
+### 1.1.3. ic-tests
 
 + data
     + F1_RAW_Cls001L1_RAW.db
@@ -54,34 +54,24 @@ make sure the algorithm of each factor is symmetrical about 0
     + F1_NEU_Cls001L1_NEU.pdf
     + ...
 
-## Steps to add new factor
+## 1.2. Steps to add new factor
 
-config.yaml
++ suppose new factor class is 'XYZ'
++ create a file with name = 'xyz.py' in './factor_algs'
++ **Optional Step 1** create a new subclass of CCfgFactorGrp in './typedefs/typedefFactors.py', if necessary.
++ **Optional Step 2** create a new subclass of CCfgFactorGrp in './solutions/factor.py', if necessary.
++ give definition of 'CCfgFactorGrpXYZ' in xyz.py, it should inherit from new subclass created in **optional step 1** OR using existing ones, like
+    + CCfgFactorGrpWin
+    + CCfgFactorGrpWinLambda
+    + CCfgFactorGrpLambda
++ give definition of 'CFactorMF' in xyz.py , it should inherit from new subclass created in **optional step 2** OR using existing ones, like
+    + CFactorsByInstru
+    + CFactorCORR
++ update run_all.ps1. If this factor has a good performance in IC test, and we want keep it for further usage.
+    + `python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass XYZ`
+    + `python main.py --bgn $bgn_date --stp $stp_date ic --fclass XYZ`
 
-+ update args
-
-typedef.py
-
-+ update TFactorClass
-+ new class CCfgFactorGrpNewFactor
-+ update CCfgFactors
-
-config.py
-
-+ update import
-+ update cfg_factors
-
-factorAlg.py
-
-+ from typedef import CCfgFactorGrpNewFactor
-+ new class CFactorNewFactor
-+ update pick_factor
-
-run_all.ps1
-+ factor
-+ ic
-
-## Steps to add new models
+## 1.3. Steps to add new models
 
 config.yaml
 
@@ -100,3 +90,17 @@ mclrn_parser.py
 
 + update import
 + update parse_config_to_mclrn_test
+
+## 1.4. Topology for typedef
+
+```mermaid
+graph LR
+    typedefInstrus --> typedefModels;
+    typedefReturns --> typedefModels;
+    typedefFactors --> typedefModels;
+    typedefInstrus -----> typedef;
+    typedefModels ---> typedef;
+    typedefReturns -----> typedef;
+    typedefFactors -----> typedef;
+    typedef --> config
+```

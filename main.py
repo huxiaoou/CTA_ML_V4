@@ -1,5 +1,5 @@
 import argparse
-from typedef import CCfgFactors
+from solutions.factor import CCfgFactors
 
 
 def parse_args(cfg_facs: CCfgFactors):
@@ -38,7 +38,7 @@ def parse_args(cfg_facs: CCfgFactors):
         required=True, choices=cfg_facs.classes,
     )
 
-    # switch: test return
+    # switch: ic
     arg_parser_sub = arg_parser_subs.add_parser(name="ic", help="Calculate ic_tests")
     arg_parser_sub.add_argument(
         "--fclass", type=str,
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     from config import proj_cfg, db_struct_cfg, cfg_factors
     from husfort.qlog import define_logger
     from husfort.qcalendar import CCalendar
-    from typedef import CCfgFactorGrp, TFacRetType
+    from typedefs.typedefReturns import TFacRetType
     from solutions.shared import get_avlb_db, get_market_db
 
     define_logger()
@@ -79,6 +79,8 @@ if __name__ == "__main__":
     calendar = CCalendar(proj_cfg.calendar_path)
     args = parse_args(cfg_facs=cfg_factors)
     bgn_date, stp_date = args.bgn, args.stp or calendar.get_next_date(args.bgn, shift=1)
+    db_struct_avlb = get_avlb_db(proj_cfg.available_dir)
+    db_struct_mkt = get_market_db(proj_cfg.market_dir, proj_cfg.const.SECTORS)
 
     if args.switch == "available":
         from solutions.available import main_available
@@ -88,7 +90,7 @@ if __name__ == "__main__":
             universe=proj_cfg.universe,
             cfg_avlb_unvrs=proj_cfg.avlb_unvrs,
             db_struct_preprocess=db_struct_cfg.preprocess,
-            db_struct_avlb=get_avlb_db(proj_cfg.available_dir),
+            db_struct_avlb=db_struct_avlb,
             calendar=calendar,
         )
     elif args.switch == "market":
@@ -97,8 +99,8 @@ if __name__ == "__main__":
         main_market(
             bgn_date=bgn_date, stp_date=stp_date,
             calendar=calendar,
-            db_struct_avlb=get_avlb_db(proj_cfg.available_dir),
-            db_struct_mkt=get_market_db(proj_cfg.market_dir, proj_cfg.const.SECTORS),
+            db_struct_avlb=db_struct_avlb,
+            db_struct_mkt=db_struct_mkt,
             path_mkt_idx_data=proj_cfg.market_index_path,
             mkt_idxes=proj_cfg.mkt_idxes.idxes,
             sectors=proj_cfg.const.SECTORS,
@@ -118,14 +120,13 @@ if __name__ == "__main__":
                 test_returns_by_instru_dir=proj_cfg.test_returns_by_instru_dir,
                 test_returns_avlb_raw_dir=proj_cfg.test_returns_avlb_raw_dir,
                 test_returns_avlb_neu_dir=proj_cfg.test_returns_avlb_neu_dir,
-                db_struct_avlb=get_avlb_db(proj_cfg.available_dir),
+                db_struct_avlb=db_struct_avlb,
             )
             test_returns_avlb.main(bgn_date, stp_date, calendar)
     elif args.switch == "factor":
-        from solutions.factor import CFactorsAvlb
-        from solutions.factorAlg import pick_factor
+        from solutions.factor import CFactorsAvlb, pick_factor
 
-        fac, cfg = pick_factor(
+        cfg, fac = pick_factor(
             fclass=args.fclass,
             cfg_factors=cfg_factors,
             factors_by_instru_dir=proj_cfg.factors_by_instru_dir,
@@ -133,6 +134,9 @@ if __name__ == "__main__":
             preprocess=db_struct_cfg.preprocess,
             minute_bar=db_struct_cfg.minute_bar,
             db_struct_pos=db_struct_cfg.position,
+            db_struct_forex=db_struct_cfg.forex,
+            db_struct_macro=db_struct_cfg.macro,
+            db_struct_mkt=db_struct_mkt,
         )
         fac.main(
             bgn_date=bgn_date, stp_date=stp_date, calendar=calendar,
@@ -144,13 +148,13 @@ if __name__ == "__main__":
             factors_by_instru_dir=proj_cfg.factors_by_instru_dir,
             factors_avlb_raw_dir=proj_cfg.factors_avlb_raw_dir,
             factors_avlb_neu_dir=proj_cfg.factors_avlb_neu_dir,
-            db_struct_avlb=get_avlb_db(proj_cfg.available_dir),
+            db_struct_avlb=db_struct_avlb,
         )
         fac_avlb.main(bgn_date, stp_date, calendar)
     elif args.switch == "ic":
         from solutions.ic_tests import main_ic_tests, TICTestAuxArgs
 
-        factor_grp: CCfgFactorGrp = getattr(cfg_factors, args.fclass)
+        factor_grp = cfg_factors.get_cfg(factor_class=args.fclass)
         aux_args_list: list[TICTestAuxArgs] = list(zip(
             [TFacRetType.RAW, TFacRetType.NEU],
             [proj_cfg.factors_avlb_raw_dir, proj_cfg.factors_avlb_neu_dir],

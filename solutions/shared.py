@@ -1,6 +1,7 @@
 import os
 from husfort.qsqlite import CDbStruct, CSqlTable, CSqlVar
-from typedef import TReturnClass, CRet, TFactorClass, TFactors, TFacRetType
+from typedefs.typedefReturns import TReturnClass, CRet, TFacRetType
+from typedefs.typedefFactors import TFactorClass, TFactors
 
 
 # ----------------------------------------

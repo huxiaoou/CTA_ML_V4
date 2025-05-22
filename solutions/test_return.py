@@ -6,7 +6,8 @@ from husfort.qcalendar import CCalendar
 from husfort.qsqlite import CDbStruct, CMgrSqlDb
 from husfort.qsimquick import CTestReturnLoaderBase
 from solutions.shared import gen_test_returns_by_instru_db, gen_test_returns_avlb_db
-from typedef import TUniverse, CRet, TReturnClass, TFacRetType
+from typedefs.typedefInstrus import TUniverse
+from typedefs.typedefReturns import CRet, TReturnClass, TFacRetType
 
 
 class CTestReturnsByInstru:

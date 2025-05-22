@@ -1,7 +1,8 @@
 import os
 import pandas as pd
 from loguru import logger
-from typedef import CRet, CCfgFactorGrp, TFacRetType, TRets
+from typedefs.typedefReturns import CRet, TFacRetType, TRets
+from typedefs.typedefFactors import CCfgFactorGrp
 from husfort.qutility import check_and_makedirs, SFG
 from husfort.qsqlite import CMgrSqlDb
 from husfort.qcalendar import CCalendar

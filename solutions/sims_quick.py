@@ -3,7 +3,7 @@ from rich.progress import track, Progress
 from husfort.qcalendar import CCalendar
 from husfort.qutility import qtimer, check_and_makedirs, error_handler
 from husfort.qsimquick import CSimQuick
-from typedef import CRet, TReturnClass
+from typedefs.typedefReturns import CRet, TReturnClass
 from solutions.test_return import CTestReturnLoader
 from solutions.mclrn import CTestMclrn
 from solutions.signals import CSignalsLoader

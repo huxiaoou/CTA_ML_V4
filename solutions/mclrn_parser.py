@@ -9,8 +9,10 @@ from solutions.mclrn import (
     CTestMclrnLinear, CTestMclrnRidge, CTestMclrnLogistic, CTestMclrnMlp,
     CTestMclrnLGBM, CTestMclrnXGB,
 )
-from typedef import (CTestData, CTestModel, TRets, CRet, TFacUnvrsOpts,
-                     TFacRetType, TModelType, TUniverse)
+from typedefs.typedefInstrus import TUniverse
+from typedefs.typedefReturns import TRets, CRet, TFacRetType
+from typedefs.typedefModels import CTestData, CTestModel, TModelType
+from typedef import TFacUnvrsOpts
 
 """
 -------------

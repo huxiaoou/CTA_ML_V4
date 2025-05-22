@@ -15,10 +15,9 @@ from husfort.qsqlite import CMgrSqlDb
 from husfort.qutility import SFG, SFY, check_and_makedirs, qtimer
 from husfort.qmultiprocessing import TTask, mul_process_for_tasks, uni_process_for_tasks, CAgentQueue, EStatusWorker
 from solutions.shared import gen_factors_avlb_db, gen_test_returns_avlb_db, gen_prdct_db
-from typedef import (
-    TReturnName, TFactorNames, CFactor,
-    CTestData, CTestModel,
-)
+from typedefs.typedefFactors import CFactor, TFactorNames
+from typedefs.typedefReturns import TReturnName
+from typedefs.typedefModels import CTestData, CTestModel
 
 """
 Part I: Base class for Machine Learning

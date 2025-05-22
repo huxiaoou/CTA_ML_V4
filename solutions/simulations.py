@@ -9,7 +9,7 @@ from husfort.qsqlite import CDbStruct
 from husfort.qutility import error_handler, qtimer
 from solutions.mclrn import CTestMclrn
 from solutions.signals import gen_sig_db
-from typedef import TReturnClass
+from typedefs.typedefReturns import TReturnClass
 
 TSimArgs = tuple[CSignal, TExePriceType]
 

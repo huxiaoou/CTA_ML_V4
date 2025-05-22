@@ -1,16 +1,19 @@
+import os
 import numpy as np
 import pandas as pd
 import scipy.stats as sps
 import multiprocessing as mp
+from itertools import product
 from typing import Literal
 from loguru import logger
 from rich.progress import track, Progress
 from husfort.qutility import SFG, SFY, error_handler, check_and_makedirs
 from husfort.qsqlite import CDbStruct, CMgrSqlDb
 from husfort.qcalendar import CCalendar
-from typedef import CCfgFactorGrp, TUniverse
-from typedef import TFactorClass, TFactors
+from typedefs.typedefFactors import CCfgFactorGrp, CCfgFactorGrpWinLambda, TFactorClass, TFactors
+from typedefs.typedefInstrus import TUniverse
 from solutions.shared import gen_factors_by_instru_db, gen_factors_avlb_db
+from math_tools.rolling import cal_rolling_top_corr
 
 
 class _CFactorsByInstruDbOperator:
@@ -212,6 +215,29 @@ class CFactorsByInstru(_CFactorsByInstruMoreDb):
         return 0
 
 
+class CFactorCORR(CFactorsByInstru):
+    def __init__(self, factor_grp: CCfgFactorGrpWinLambda, **kwargs):
+        super().__init__(factor_grp=factor_grp, **kwargs)
+        self.cfg = factor_grp
+
+    def cal_core(
+            self,
+            raw_data: pd.DataFrame,
+            bgn_date: str, stp_date: str,
+            x: str, y: str,
+            sort_var: str, direction: int = -1,
+    ):
+        for win, lbd in product(self.cfg.wins, self.cfg.lbds):
+            name_vanilla = self.cfg.name_vanilla(win, lbd)
+            raw_data[name_vanilla] = cal_rolling_top_corr(
+                raw_data=raw_data,
+                bgn_date=bgn_date, stp_date=stp_date,
+                win=win, top=lbd, x=x, y=y,
+                sort_var=sort_var, direction=direction,
+            )
+        return 0
+
+
 class CFactorsAvlb(_CFactorsByInstruDbOperator):
     def __init__(
             self,
@@ -390,3 +416,70 @@ class CFactorsLoader:
         )
         data = sqldb.read_by_range(bgn_date, stp_date, value_columns=self.value_columns)
         return data
+
+
+"""
+------------------------------------
+--- Management tools for factors ---
+------------------------------------
+"""
+
+
+class CCfgFactors:
+    def __init__(self, algs_dir: str, cfg_data: dict):
+        self.mgr: dict[str, tuple[CCfgFactorGrp, type[CFactorsByInstru]]] = {}
+        for module in os.listdir(algs_dir):
+            if module.endswith(".py"):
+                module_name = module[:-3]  # exclude ".py"
+                factor_class = module_name.upper()  # "mtm" -> "MTM"
+                module_path = f"{algs_dir}.{module_name}"
+                module_contents = __import__(module_path)
+                cfg = getattr(module_contents.__dict__[module_name], f"CCfgFactorGrp{factor_class}")
+                fac = getattr(module_contents.__dict__[module_name], f"CFactor{factor_class}")
+                self.mgr[factor_class] = (cfg(**cfg_data[factor_class]), fac)
+
+    def __repr__(self):
+        r = ""
+        for factor_class, (cfg, fac) in self.mgr.items():
+            r += f"{factor_class}:({cfg}, {fac})\n"
+        return r
+
+    def get_cfg(self, factor_class: str) -> CCfgFactorGrp:
+        return self.mgr[factor_class][0]
+
+    def get_fac(self, factor_class: str) -> type[CFactorsByInstru]:
+        return self.mgr[factor_class][1]
+
+    def get_cfg_and_fac(self, factor_class: str) -> tuple[CCfgFactorGrp, type[CFactorsByInstru]]:
+        return self.mgr[factor_class]
+
+    @property
+    def classes(self) -> list[str]:
+        return list(self.mgr.keys())
+
+
+def pick_factor(
+        fclass: TFactorClass,
+        cfg_factors: CCfgFactors,
+        factors_by_instru_dir: str,
+        universe: TUniverse,
+        preprocess: CDbStruct,
+        minute_bar: CDbStruct,
+        db_struct_pos: CDbStruct,
+        db_struct_forex: CDbStruct,
+        db_struct_macro: CDbStruct,
+        db_struct_mkt: CDbStruct,
+) -> tuple[CCfgFactorGrp, CFactorsByInstru]:
+    cfg, fac_prototype = cfg_factors.get_cfg_and_fac(fclass)
+    fac = fac_prototype(
+        factor_grp=cfg,
+        factors_by_instru_dir=factors_by_instru_dir,
+        universe=universe,
+        db_struct_preprocess=preprocess,
+        db_struct_minute_bar=minute_bar,
+        db_struct_pos=db_struct_pos,
+        db_struct_forex=db_struct_forex,
+        db_struct_macro=db_struct_macro,
+        db_struct_mkt=db_struct_mkt,
+    )
+    return cfg, fac

@@ -1,18 +1,11 @@
 import yaml
 from husfort.qsqlite import CDbStruct, CSqlTable
-from typedef import (TUniverse, TInstruName, TReturnClass, TFactorClass, TFactorName,
-                     TFacRetType, TFacUnvrsOpts, CFactor,
-                     CCfgInstru, CCfgAvlbUnvrs, CCfgMktIdx, CCfgConst, CTestModel)
-from typedef import CCfgPrd, CCfgSim
+from typedefs.typedefInstrus import TUniverse, TInstruName, CCfgInstru
+from typedefs.typedefReturns import TReturnClass, TFacRetType
+from typedefs.typedefFactors import TFactorClass, TFactorName, CFactor
+from typedef import CCfgPrd, CCfgSim, TFacUnvrsOpts, CCfgAvlbUnvrs, CCfgMktIdx, CCfgConst, CTestModel
 from typedef import CCfgProj, CCfgDbStruct
-from typedef import (
-    CCfgFactors,
-    CCfgFactorGrpMTM, CCfgFactorGrpSKEW, CCfgFactorGrpKURT,
-    CCfgFactorGrpRS, CCfgFactorGrpBASIS, CCfgFactorGrpTS,
-    CCfgFactorGrpLIQUIDITY, CCfgFactorGrpSIZE, CCfgFactorGrpMF, CCfgFactorGrpJUMP,
-    CCfgFactorGrpCTP, CCfgFactorGrpCTR, CCfgFactorGrpCVP,
-    CCfgFactorGrpSMT, CCfgFactorGrpSPDWEB, CCfgFactorGrpACR, CCfgFactorGrpIDV,
-)
+from solutions.factor import CCfgFactors
 
 # ---------- project configuration ----------
 
@@ -104,25 +97,7 @@ db_struct_cfg = CCfgDbStruct(
 )
 
 # --- factors ---
-cfg_factors = CCfgFactors(
-    MTM=CCfgFactorGrpMTM(**proj_cfg.factors["MTM"]),
-    SKEW=CCfgFactorGrpSKEW(**proj_cfg.factors["SKEW"]),
-    KURT=CCfgFactorGrpKURT(**proj_cfg.factors["KURT"]),
-    RS=CCfgFactorGrpRS(**proj_cfg.factors["RS"]),
-    BASIS=CCfgFactorGrpBASIS(**proj_cfg.factors["BASIS"]),
-    TS=CCfgFactorGrpTS(**proj_cfg.factors["TS"]),
-    LIQUIDITY=CCfgFactorGrpLIQUIDITY(**proj_cfg.factors["LIQUIDITY"]),
-    SIZE=CCfgFactorGrpSIZE(**proj_cfg.factors["SIZE"]),
-    MF=CCfgFactorGrpMF(**proj_cfg.factors["MF"]),
-    JUMP=CCfgFactorGrpJUMP(**proj_cfg.factors["JUMP"]),
-    CTP=CCfgFactorGrpCTP(**proj_cfg.factors["CTP"]),
-    CTR=CCfgFactorGrpCTR(**proj_cfg.factors["CTR"]),
-    CVP=CCfgFactorGrpCVP(**proj_cfg.factors["CVP"]),
-    SMT=CCfgFactorGrpSMT(**proj_cfg.factors["SMT"]),
-    SPDWEB=CCfgFactorGrpSPDWEB(**proj_cfg.factors["SPDWEB"]),
-    ACR=CCfgFactorGrpACR(**proj_cfg.factors["ACR"]),
-    IDV=CCfgFactorGrpIDV(**proj_cfg.factors["IDV"]),
-)
+cfg_factors = CCfgFactors(algs_dir="factor_algs", cfg_data=proj_cfg.factors)
 
 if __name__ == "__main__":
     sep = "-" * 80
@@ -138,3 +113,6 @@ if __name__ == "__main__":
 
     print(sep)
     print(factors_universe_options)
+
+    print(sep)
+    print(cfg_factors)
