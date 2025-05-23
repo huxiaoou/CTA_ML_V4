@@ -221,6 +221,8 @@ factors:
     wins: [ 5, 8, 13, 21, 34, 55 ]
   CNVG:
     wins: [ 5, 10, 20, 60, 120 ]
+  REOC:
+    wins: [ 1, 2, 3, 5, 10, 20, 120, 240 ]
 
 # ------- factors universe -------
 factors_universe_options:
