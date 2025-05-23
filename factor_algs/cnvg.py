@@ -34,6 +34,8 @@ class CFactorCNVG(CFactorsByInstru):
             raise TypeError("factor_grp must be CCfgFactorGrpCNVG")
         super().__init__(factor_grp=factor_grp, **kwargs)
         self.cfg = factor_grp
+        self.sgn_win = min(120, max(factor_grp.wins))
+        self.ben_win = min(120, max(factor_grp.wins))
 
     def cal_factor_by_instru(self, instru: str, bgn_date: str, stp_date: str, calendar: CCalendar) -> pd.DataFrame:
         cls, vol, amt = "close_major", "vol_major", "amount_major"
@@ -45,11 +47,12 @@ class CFactorCNVG(CFactorsByInstru):
         major_data = major_data.rename(columns={cls: "cls", vol: "vol", amt: "amt"})
         for win, var_to_cal in product(self.cfg.wins, self.cfg.vars_to_cal):
             major_data[self.cfg.name_ma(win, var_to_cal)] = major_data[var_to_cal].rolling(window=win).mean()
-        sgn = np.sign(major_data["cls"] / major_data["cls"].rolling(window=20).mean() - 1)
         for var_to_cal in self.cfg.vars_to_cal:
             name_f, names_ma = self.cfg.name_f(var_to_cal), self.cfg.names_ma(var_to_cal)
-            name_benchmark = self.cfg.name_ma(20, var_to_cal)
-            major_data[name_f] = (major_data[names_ma].std(axis=1) / major_data[name_benchmark]) * sgn * (-1.0)
+            sgn = -np.sign(major_data[var_to_cal] / major_data[var_to_cal].rolling(window=self.sgn_win).mean() - 1)
+            name_benchmark = self.cfg.name_ma(self.ben_win, var_to_cal)
+            major_data[name_f] = (major_data[names_ma].std(axis=1) / major_data[name_benchmark]) * sgn
+            # major_data[name_f] = major_data[names_ma].std(axis=1) * sgn * (-1.0)
         self.rename_ticker(major_data)
         factor_data = self.get_factor_data(major_data, bgn_date=bgn_date)
         return factor_data
