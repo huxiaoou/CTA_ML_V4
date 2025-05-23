@@ -22,6 +22,7 @@ python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass CTP
 python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass CVP
 python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass SPDWEB
 python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass ACR
+python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass REOC
 
 python main.py --bgn $bgn_date --stp $stp_date ic --fclass MTM
 python main.py --bgn $bgn_date --stp $stp_date ic --fclass SKEW
@@ -35,6 +36,7 @@ python main.py --bgn $bgn_date --stp $stp_date ic --fclass CTP
 python main.py --bgn $bgn_date --stp $stp_date ic --fclass CVP
 python main.py --bgn $bgn_date --stp $stp_date ic --fclass SPDWEB
 python main.py --bgn $bgn_date --stp $stp_date ic --fclass ACR
+python main.py --bgn $bgn_date --stp $stp_date ic --fclass REOC
 
 python main.py --bgn $bgn_date_mclrn --stp $stp_date mclrn
 python main.py --bgn $bgn_date_sig --stp $stp_date signals

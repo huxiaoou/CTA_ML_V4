@@ -16,7 +16,7 @@ class CCfgFactorGrpREOC(CCfgFactorGrpWin):
 
     @property
     def factor_names(self) -> TFactorNames:
-        return self.names_vanilla + self.names_diff
+        return self.names_vanilla + self.names_vol + self.names_diff
 
 
 class CFactorREOC(CFactorsByInstru):
@@ -49,8 +49,9 @@ class CFactorREOC(CFactorsByInstru):
         minb_data["doi"] = minb_data["oi"].diff().abs()
         minb_data["eff"] = robust_div(minb_data["doi"], minb_data["vol"], nan_val=0)
         reoc = minb_data.groupby(by="trade_date").apply(self.cal_reoc)
-        for win, name_vanilla in zip(self.cfg.wins, self.cfg.names_vanilla):
+        for win, name_vanilla, name_vol in zip(self.cfg.wins, self.cfg.names_vanilla, self.cfg.names_vol):
             maj_data[name_vanilla] = reoc.rolling(win).sum()
+            maj_data[name_vol] = reoc.rolling(win).std()
         w0, w1 = 240, 5
         n0, n1 = self.cfg.name_vanilla(w0), self.cfg.name_vanilla(w1)
         maj_data[self.cfg.name_diff()] = maj_data[n0] * np.sqrt(w1 / w0) - maj_data[n1]

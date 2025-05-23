@@ -49,6 +49,14 @@ class CCfgFactorGrpWin(CCfgFactorGrp):
     def names_vanilla(self) -> TFactorNames:
         return [self.name_vanilla(w) for w in self.wins]
 
+    # --- name
+    def name_vol(self, w: int) -> TFactorName:
+        return TFactorName(f"{self.factor_class}{w:03d}VOL")
+
+    @property
+    def names_vol(self) -> TFactorNames:
+        return [self.name_vol(w) for w in self.wins]
+
     # --- extra: Delay
     def name_delay(self, w: int) -> TFactorName:
         return TFactorName(f"{self.factor_class}{w:03d}D")
