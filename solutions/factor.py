@@ -10,7 +10,7 @@ from rich.progress import track, Progress
 from husfort.qutility import SFG, SFY, error_handler, check_and_makedirs
 from husfort.qsqlite import CDbStruct, CMgrSqlDb
 from husfort.qcalendar import CCalendar
-from typedefs.typedefFactors import CCfgFactorGrp, CCfgFactorGrpWinLambda, TFactorClass, TFactors
+from typedefs.typedefFactors import CCfgFactorGrp, CCfgFactorGrpWinLambda, TFactorClass, TFactors, TFactorName
 from typedefs.typedefInstrus import TUniverse
 from solutions.shared import gen_factors_by_instru_db, gen_factors_avlb_db
 from math_tools.rolling import cal_rolling_top_corr
@@ -456,6 +456,12 @@ class CCfgFactors:
     @property
     def classes(self) -> list[str]:
         return list(self.mgr.keys())
+
+    def match_class(self, factor_name: TFactorName) -> TFactorClass | None:
+        for factor_class, (cfg, _) in self.mgr.items():
+            if factor_name in cfg.factor_names:
+                return TFactorClass(factor_class)
+        return None
 
 
 def pick_factor(
