@@ -223,6 +223,8 @@ factors:
     wins: [ 5, 10, 20, 60, 120, 240 ]
   REOC:
     wins: [ 1, 2, 3, 5, 10, 20, 120, 240 ]
+  NPLS:
+    wins: [ 3, 5, 10, 20, 60, 120, 240 ]
 
 # ------- factors universe -------
 factors_universe_options:
