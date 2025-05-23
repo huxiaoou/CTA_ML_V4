@@ -245,6 +245,7 @@ factors_universe_options:
       - [ SPDWEB, SPDWEB001L10 ]
       - [ ACR, ACR008vol ]
       - [ REOC, REOCDIF ]
+      - [ NPLS, NPLSDIF ]
     Cls:
       - [ MTM, MTMDIF ]
       - [ SKEW, SKEW120 ]
@@ -260,6 +261,7 @@ factors_universe_options:
       - [ SIZE, SIZEDIF ]
       - [ ACR, ACR008vol ]
       - [ REOC, REOCDIF ]
+      - [ NPLS, NPLSDIF ]
   neu:
     Opn:
       - [ MTM, MTMDIF ]
@@ -277,6 +279,7 @@ factors_universe_options:
       - [ SPDWEB, SPDWEB001L10 ]
       - [ ACR, ACR008vol ]
       - [ REOC, REOCDIF ]
+      - [ NPLS, NPLSDIF ]
     Cls:
       - [ MTM, MTMDIF ]
       - [ SKEW, SKEW020D ]
@@ -292,6 +295,7 @@ factors_universe_options:
       - [ SIZE, SIZEDIF ]
       - [ ACR, ACR008vol ]
       - [ REOC, REOCDIF ]
+      - [ NPLS, NPLSDIF ]
 
 # ------- models -------
 test_models:
