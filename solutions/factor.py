@@ -10,7 +10,8 @@ from rich.progress import track, Progress
 from husfort.qutility import SFG, SFY, error_handler, check_and_makedirs
 from husfort.qsqlite import CDbStruct, CMgrSqlDb
 from husfort.qcalendar import CCalendar
-from typedefs.typedefFactors import CCfgFactorGrp, CCfgFactorGrpWinLambda, TFactorClass, TFactors, TFactorName
+from husfort.qplot import CPlotLines
+from typedefs.typedefFactors import CCfgFactorGrp, CCfgFactorGrpWinLambda, TFactorClass, TFactors, TFactorName, CFactor
 from typedefs.typedefInstrus import TUniverse
 from solutions.shared import gen_factors_by_instru_db, gen_factors_avlb_db
 from math_tools.rolling import cal_rolling_top_corr
@@ -461,7 +462,12 @@ class CCfgFactors:
         for factor_class, (cfg, _) in self.mgr.items():
             if factor_name in cfg.factor_names:
                 return TFactorClass(factor_class)
-        return None
+        raise ValueError(f"No factor named {factor_name}")
+
+    def match_factor(self, factor_name: TFactorName) -> CFactor:
+        factor_class = self.match_class(factor_name)
+        factor = CFactor(factor_class, factor_name)
+        return factor
 
 
 def pick_factor(
@@ -489,3 +495,60 @@ def pick_factor(
         db_struct_mkt=db_struct_mkt,
     )
     return cfg, fac
+
+
+"""
+---------------------------------------------
+--- check correlation between two factors ---
+---------------------------------------------
+"""
+
+
+def cal_corr_2f(
+        f0: CFactor, f1: CFactor, factors_avlb_dir: str,
+        bgn_date: str, stp_date: str,
+        factors_corr_dir: str
+):
+    if factors_avlb_dir.endswith("factors_avlb_raw"):
+        raw_neu_tag = "raw"
+    elif factors_avlb_dir.endswith("factors_avlb_neu"):
+        raw_neu_tag = "neu"
+    else:
+        raise ValueError(f"factors_avlb_dir = {factors_avlb_dir} is illegal")
+    save_id = f"ic_{f0.factor_name}_{f1.factor_name}_{raw_neu_tag}"
+
+    # load data
+    f0_loader = CFactorsLoader(f0.factor_class, factors=[f0], factors_avlb_dir=factors_avlb_dir)
+    f1_loader = CFactorsLoader(f1.factor_class, factors=[f1], factors_avlb_dir=factors_avlb_dir)
+    f0_data = f0_loader.load(bgn_date, stp_date)
+    f1_data = f1_loader.load(bgn_date, stp_date)
+    merged_data = pd.merge(
+        left=f0_data, right=f1_data, how="inner", on=["trade_date", "instrument"]
+    )
+
+    # cal ic
+    f_names = [f0.factor_name, f1.factor_name]
+    ic = merged_data.groupby(by="trade_date")[f_names].apply(
+        lambda z: z.corr().loc[f0.factor_name, f1.factor_name]
+    )
+    ic_cumsum = ic.cumsum()
+    res = pd.DataFrame({"ic": ic, "ic_cumsum": ic_cumsum})
+
+    # save to file
+    check_and_makedirs(factors_corr_dir)
+    res_file = f"{save_id}.csv"
+    res_path = os.path.join(factors_corr_dir, res_file)
+    res.to_csv(res_path, float_format="%.6f", index_label="trade_date")
+
+    # plot
+    artist = CPlotLines(
+        plot_data=res[["ic_cumsum"]],
+        fig_name=f"{save_id}",
+        fig_save_dir=factors_corr_dir,
+        colormap="jet"
+    )
+    artist.plot()
+    artist.set_axis_x(xtick_count=20, xtick_label_size=8)
+    artist.save_and_close()
+    logger.info(f"Correlation between {f0.factor_name} and {f1.factor_name} calculated")
+    return 0

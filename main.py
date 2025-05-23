@@ -61,6 +61,11 @@ def parse_args(cfg_facs: CCfgFactors):
     # switch: evaluations
     arg_parser_subs.add_parser(name="quick", help="Calculate quick simulations for signals")
 
+    # switch: fcorr
+    arg_parser_sub = arg_parser_subs.add_parser(name="fcorr", help="Calculate correlations between 2 factors")
+    arg_parser_sub.add_argument("--f0", type=str, required=True, help="first factor name, like 'MTM240'")
+    arg_parser_sub.add_argument("--f1", type=str, required=True, help="Second factor name, like 'TS240'")
+
     # switch: test
     arg_parser_subs.add_parser(name="test", help="Test some functions")
     return arg_parser.parse_args()
@@ -261,5 +266,20 @@ if __name__ == "__main__":
                 call_multiprocess=not args.nomp,
                 processes=args.processes,
             )
+    elif args.switch == "fcorr":
+        from solutions.factor import cal_corr_2f
+
+        f0, f1 = cfg_factors.match_factor(args.f0), cfg_factors.match_factor(args.f1)
+        cal_corr_2f(
+            f0=f0, f1=f1, factors_avlb_dir=proj_cfg.factors_avlb_raw_dir,
+            bgn_date=bgn_date, stp_date=stp_date,
+            factors_corr_dir=proj_cfg.factors_corr_dir,
+        )
+        cal_corr_2f(
+            f0=f0, f1=f1, factors_avlb_dir=proj_cfg.factors_avlb_neu_dir,
+            bgn_date=bgn_date, stp_date=stp_date,
+            factors_corr_dir=proj_cfg.factors_corr_dir,
+        )
+
     elif args.switch == "test":
         logger.info("Do some tests")

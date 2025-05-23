@@ -160,3 +160,7 @@ class CCfgProj:
     @property
     def sims_quick_dir(self):
         return os.path.join(self.project_root_dir, "sims_quick")
+
+    @property
+    def factors_corr_dir(self):
+        return os.path.join(self.project_root_dir, "factors_corr")
