@@ -228,6 +228,8 @@ factors:
   WSPLIT:
     wins: [ 1, 3, 5 ]
     lbds: [ 0.1, 0.2, 0.4 ]
+  S0BETA:
+    wins: [ 10, 20, 60, 120 ]
 
 
 # ------- factors universe -------
