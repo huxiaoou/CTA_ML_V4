@@ -111,10 +111,12 @@ class CICTest:
             plot_data=ic_cumsum,
             fig_name=f"{self.save_id}",
             fig_save_dir=save_dir,
-            colormap="jet"
+            colormap="jet",
+            line_style=["-", "-."] * int(ic_cumsum.shape[1] / 2),
+            line_width=1.5,
         )
         artist.plot()
-        artist.set_axis_x(xtick_count=10)
+        artist.set_axis_x(xtick_count=20, xtick_label_size=8)
         artist.save_and_close()
         return 0
 
