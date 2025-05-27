@@ -255,6 +255,7 @@ factors_universe_options:
       - [ REOC, REOCDIF ]
       - [ NPLS, NPLSDIF ]
       - [ S0BETA, S0BETA020 ]
+      - [ ONR, ONR120 ]
     Cls:
       - [ MTM, MTMDIF ]
       - [ SKEW, SKEW120 ]
@@ -273,6 +274,7 @@ factors_universe_options:
       - [ NPLS, NPLSDIF ]
       - [ S0BETA, S0BETA020 ]
       - [ S0BETA, S0BETARES020 ]
+      - [ ONR, ONR120 ]
   neu:
     Opn:
       - [ MTM, MTMDIF ]
@@ -292,6 +294,7 @@ factors_universe_options:
       - [ REOC, REOCDIF ]
       - [ S0BETA, S0BETA020 ]
       - [ NPLS, NPLSDIF ]
+      - [ ONR, ONR120 ]
     Cls:
       - [ MTM, MTMDIF ]
       - [ SKEW, SKEW020D ]
@@ -310,6 +313,7 @@ factors_universe_options:
       - [ NPLS, NPLSDIF ]
       - [ S0BETA, S0BETA020 ]
       - [ S0BETA, S0BETARES020 ]
+      - [ ONR, ONR120 ]
 
 # ------- models -------
 test_models:
