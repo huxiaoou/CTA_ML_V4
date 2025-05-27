@@ -31,7 +31,7 @@ def evl_sim(sim_id: str, sim_save_dir: str, evl_save_dir: str) -> dict:
     check_and_makedirs(summary_by_id_rpt_dir)
     summary_save_file = f"{sim_id}.csv"
     summary_save_path = os.path.join(summary_by_id_rpt_dir, summary_save_file)
-    summary_by_year.to_csv(summary_save_path, float_format="%.4f")
+    summary_by_year.to_csv(summary_save_path, float_format="%.4f", index_label="trade_year")
 
     # all plot
     summary_by_id_plt_dir = os.path.join(evl_save_dir, "by_id_plt")
