@@ -245,7 +245,6 @@ factors_universe_options:
       - [ BASIS, BASIS120 ]
       - [ BASIS, BASISRES010 ]
       - [ TS, TS240 ]
-      - [ TS, TSRES010 ]
       - [ LIQUIDITY, LIQUIDITY240 ]
       - [ CTP, CTP060L95 ]
       - [ CVP, CVP060L95 ]
@@ -264,7 +263,6 @@ factors_universe_options:
       - [ BASIS, BASIS120 ]
       - [ BASIS, BASISRES010 ]
       - [ TS, TS240 ]
-      - [ TS, TSRES010 ]
       - [ LIQUIDITY, LIQUIDITY240 ]
       - [ CTP, CTP060L95 ]
       - [ CVP, CVP060L95 ]
@@ -273,7 +271,6 @@ factors_universe_options:
       - [ REOC, REOCDIF ]
       - [ NPLS, NPLSDIF ]
       - [ S0BETA, S0BETA020 ]
-      - [ S0BETA, S0BETARES020 ]
       - [ ONR, ONR120 ]
   neu:
     Opn:
@@ -284,7 +281,6 @@ factors_universe_options:
       - [ BASIS, BASIS120 ]
       - [ BASIS, BASISRES010 ]
       - [ TS, TS240 ]
-      - [ TS, TSRES010 ]
       - [ LIQUIDITY, LIQUIDITY240 ]
       - [ CTP, CTP120L95 ]
       - [ CVP, CVP120L95 ]
@@ -292,8 +288,8 @@ factors_universe_options:
       - [ SPDWEB, SPDWEB001L10 ]
       - [ ACR, ACR008vol ]
       - [ REOC, REOCDIF ]
-      - [ S0BETA, S0BETA020 ]
       - [ NPLS, NPLSDIF ]
+      - [ S0BETA, S0BETA020 ]
       - [ ONR, ONR120 ]
     Cls:
       - [ MTM, MTMDIF ]
@@ -303,7 +299,6 @@ factors_universe_options:
       - [ BASIS, BASIS120 ]
       - [ BASIS, BASISRES010 ]
       - [ TS, TS240 ]
-      - [ TS, TSRES010 ]
       - [ LIQUIDITY, LIQUIDITY240 ]
       - [ CTP, CTP120L95 ]
       - [ CVP, CVP120L95 ]
@@ -312,7 +307,6 @@ factors_universe_options:
       - [ REOC, REOCDIF ]
       - [ NPLS, NPLSDIF ]
       - [ S0BETA, S0BETA020 ]
-      - [ S0BETA, S0BETARES020 ]
       - [ ONR, ONR120 ]
 
 # ------- models -------
