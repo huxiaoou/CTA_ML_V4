@@ -48,6 +48,6 @@ class BaseLine:
             # coe = np.sign(mu)
 
             rnk = mu.rank()
-            wgt = rnk / np.sqrt(rnk)
+            wgt = np.power(rnk, 0.25)
             coe = wgt / wgt.sum()
         return BaseLineEstimator(coe=coe.fillna(0))
