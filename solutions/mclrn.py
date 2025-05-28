@@ -207,13 +207,7 @@ class CTestMclrn:
             return False
 
     def apply_estimator(self, x: pd.DataFrame) -> np.ndarray:
-        if self.test_model.classification:
-            prob = self.fitted_estimator.predict_proba(X=x)
-            idx = np.where(self.fitted_estimator.classes_ == 1)[0][0]
-            pred = prob[:, idx] - 0.50
-        else:
-            pred = self.fitted_estimator.predict(X=x)
-        return pred
+        raise NotImplementedError
 
     def get_y_h(self, pred: np.ndarray, idx: pd.Index) -> pd.Series:
         return pd.Series(data=pred, name=self.y_col, index=idx).astype(np.float64)
@@ -336,11 +330,39 @@ class CTestMclrn:
 
 
 """
-Part II: Specific class for Machine Learning
+Part II: Apply estimator
 """
 
 
-class CTestMclrnBaseLine(CTestMclrn):
+class CTestMclrnReg(CTestMclrn):
+    def apply_estimator(self, x: pd.DataFrame) -> np.ndarray:
+        # For BASELINE, LINEAR, RIDGE
+        pred = self.fitted_estimator.predict(X=x)
+        return pred
+
+
+class CTestMclrnClsProb(CTestMclrn):
+    def apply_estimator(self, x: pd.DataFrame) -> np.ndarray:
+        # For LOGISTIC, MLP, LGBM, XGB
+        prob = self.fitted_estimator.predict_proba(X=x)
+        idx = np.where(self.fitted_estimator.classes_ == 1)[0][0]
+        pred = prob[:, idx] - 0.50
+        return pred
+
+
+class CTestMclrnClsDec(CTestMclrn):
+    def apply_estimator(self, x: pd.DataFrame) -> np.ndarray:
+        # For SVM
+        pred = self.fitted_estimator.decision_function(X=x)
+        return pred
+
+
+"""
+Part III: Specific class for Machine Learning
+"""
+
+
+class CTestMclrnBaseLine(CTestMclrnReg):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.prototype = BaseLine(icir=False)
@@ -350,7 +372,7 @@ class CTestMclrnBaseLine(CTestMclrn):
         logger.info(text)
 
 
-class CTestMclrnLinear(CTestMclrn):
+class CTestMclrnLinear(CTestMclrnReg):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.prototype = LinearRegression(fit_intercept=False)
@@ -360,7 +382,7 @@ class CTestMclrnLinear(CTestMclrn):
         logger.info(text)
 
 
-class CTestMclrnRidge(CTestMclrn):
+class CTestMclrnRidge(CTestMclrnReg):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.prototype = Ridge(fit_intercept=False)
@@ -373,7 +395,7 @@ class CTestMclrnRidge(CTestMclrn):
         logger.info(text)
 
 
-class CTestMclrnLogistic(CTestMclrn):
+class CTestMclrnLogistic(CTestMclrnClsProb):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.prototype = LogisticRegression(
@@ -389,7 +411,7 @@ class CTestMclrnLogistic(CTestMclrn):
         logger.info(text)
 
 
-class CTestMclrnMlp(CTestMclrn):
+class CTestMclrnMlp(CTestMclrnClsProb):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.prototype = MLPClassifier(
@@ -407,7 +429,7 @@ class CTestMclrnMlp(CTestMclrn):
         logger.info(text)
 
 
-class CTestMclrnSVM(CTestMclrn):
+class CTestMclrnSVM(CTestMclrnClsDec):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.prototype = LinearSVC(
@@ -424,7 +446,7 @@ class CTestMclrnSVM(CTestMclrn):
         logger.info(text)
 
 
-class CTestMclrnLGBM(CTestMclrn):
+class CTestMclrnLGBM(CTestMclrnClsProb):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         if self.test_model.early_stopping <= 0:
@@ -451,7 +473,7 @@ class CTestMclrnLGBM(CTestMclrn):
         logger.info(text)
 
 
-class CTestMclrnXGB(CTestMclrn):
+class CTestMclrnXGB(CTestMclrnClsProb):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         if self.test_model.early_stopping <= 0:
@@ -500,5 +522,5 @@ def main_train_and_predict(
     if call_multiprocess:
         mul_process_for_tasks(tasks=tasks, processes=processes, callback_log=lambda s: logger.info(s))
     else:
-        uni_process_for_tasks(tasks=tasks, callback_log=lambda s: logger.info(s))
+        uni_process_for_tasks(tasks=tasks, callback_log=lambda s: logger.info(s), debug_mode=True)
     return 0
