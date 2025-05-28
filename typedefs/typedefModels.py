@@ -11,6 +11,7 @@ class TModelType(StrEnum):
     RIDGE = "RIDGE"
     LOGISTIC = "LOGISTIC"
     MLP = "MLP"
+    SVM = "SVM"
     LGBM = "LGBM"
     XGB = "XGB"
 

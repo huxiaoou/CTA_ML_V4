@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from loguru import logger
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.linear_model import LinearRegression, Ridge, LogisticRegression
+from sklearn.svm import LinearSVC
 from sklearn.neural_network import MLPClassifier
 from solutions.mclrn_custom import BaseLine
 import lightgbm as lgb
@@ -402,6 +403,23 @@ class CTestMclrnMlp(CTestMclrn):
         text = f"{self.save_id:<52s}| " \
                f"layers = {layers} | " \
                f"alpha = {alpha:>6.4f} | " \
+               f"score = [{self.trn_score:>7.4f}]/[{self.val_score:>7.4f}]"
+        logger.info(text)
+
+
+class CTestMclrnSVM(CTestMclrn):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.prototype = LinearSVC(
+            fit_intercept=False,
+            tol=0.0001,
+            random_state=self.RANDOM_STATE,
+        )
+
+    def display_fitted_estimator(self) -> None:
+        c = self.fitted_estimator.best_estimator_.C
+        text = f"{self.save_id:<52s}| " \
+               f"C = {c:>5.2f} | " \
                f"score = [{self.trn_score:>7.4f}]/[{self.val_score:>7.4f}]"
         logger.info(text)
 

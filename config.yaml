@@ -311,36 +311,44 @@ factors_universe_options:
 
 # ------- models -------
 test_models:
-  - model_type: BASELINE
-    trn_win: 240
-    using_instru: false
-    classification: false
-    cv: 0
-    early_stopping: 0
-    hyper_param_grids:
-  - model_type: LINEAR
-    trn_win: 240
-    using_instru: false
-    classification: false
-    cv: 0
-    early_stopping: 0
-    hyper_param_grids:
-  - model_type: RIDGE
-    trn_win: 240
-    using_instru: false
-    classification: false
-    cv: 5
-    early_stopping: 0
-    hyper_param_grids:
-      alpha: [ 0.1, 1, 10 ]
-  - model_type: LOGISTIC
+  #  - model_type: BASELINE
+  #    trn_win: 240
+  #    using_instru: false
+  #    classification: false
+  #    cv: 0
+  #    early_stopping: 0
+  #    hyper_param_grids:
+  #  - model_type: LINEAR
+  #    trn_win: 240
+  #    using_instru: false
+  #    classification: false
+  #    cv: 0
+  #    early_stopping: 0
+  #    hyper_param_grids:
+  #  - model_type: RIDGE
+  #    trn_win: 240
+  #    using_instru: false
+  #    classification: false
+  #    cv: 5
+  #    early_stopping: 0
+  #    hyper_param_grids:
+  #      alpha: [ 0.1, 1, 10 ]
+  #  - model_type: LOGISTIC
+  #    trn_win: 240
+  #    using_instru: false
+  #    classification: true
+  #    cv: 5
+  #    early_stopping: 0
+  #    hyper_param_grids:
+  #      C: [ 5, 10, 20, 50, 100 ]
+  - model_type: SVM
     trn_win: 240
     using_instru: false
     classification: true
     cv: 5
     early_stopping: 0
     hyper_param_grids:
-      C: [ 5, 10, 20, 50, 100 ]
+      C: [ 0.01, 0.1, 1, 10, 100 ]
   #  - model_type: MLP
   #    trn_win: 240
   #    using_instru: false

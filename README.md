@@ -77,7 +77,7 @@ config.yaml
 
 + update test_models
 
-typedef.py
+typedefs/typedefModels.py
 
 + update TModelType
 
