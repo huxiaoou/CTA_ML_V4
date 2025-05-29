@@ -260,6 +260,7 @@ factors_universe_options:
       - [ NPLS, NPLSDIF ]
       - [ S0BETA, S0BETA020 ]
       - [ ONR, ONR120 ]
+      - [ MPH, MPH120L80 ]
     Cls:
       - [ MTM, MTMDIF ]
       - [ SKEW, SKEW120 ]
@@ -277,6 +278,7 @@ factors_universe_options:
       - [ NPLS, NPLSDIF ]
       - [ S0BETA, S0BETA020 ]
       - [ ONR, ONR120 ]
+      - [ MPH, MPH120L80 ]
   neu:
     Opn:
       - [ MTM, MTMDIF ]
