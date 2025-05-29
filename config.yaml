@@ -233,11 +233,11 @@ factors:
   ONR:
     wins: [ 3, 5, 10, 20, 60, 120, 240 ]
   MPH:
-    wins: [ 1, 5, 10, 20 ]
-    lbds: [ 0.05, 0.15, 0.25 ]
+    wins: [ 60, 120, 180 ]
+    lbds: [ 0.80, 1.00 ]
   MPC:
-    wins: [ 1, 5, 10, 20 ]
-    lbds: [ 0.05, 0.15, 0.25 ]
+    wins: [ 60, 120, 180 ]
+    lbds: [ 0.80, 1.00 ]
 
 # ------- factors universe -------
 factors_universe_options:
