@@ -181,29 +181,29 @@ class CTestMclrn:
             self.val_score = self.fitted_estimator.score(x, y)
         return 0
 
-    def check_model_existence(self, month_id: str) -> bool:
-        month_dir = os.path.join(self.mclrn_mdl_dir, month_id)
+    def check_model_existence(self, mdl_upd_day: str) -> bool:
+        month_dir = os.path.join(self.mclrn_mdl_dir, mdl_upd_day)
         model_file = f"{self.save_id}.skops"
         model_path = os.path.join(month_dir, model_file)
         return os.path.exists(model_path)
 
-    def save_model(self, month_id: str):
+    def save_model(self, mdl_upd_day: str):
         model_file = f"{self.save_id}.skops"
-        check_and_makedirs(month_dir := os.path.join(self.mclrn_mdl_dir, month_id))
+        check_and_makedirs(month_dir := os.path.join(self.mclrn_mdl_dir, mdl_upd_day))
         model_path = os.path.join(month_dir, model_file)
         sio.dump(self.fitted_estimator, model_path)
         return 0
 
-    def load_model(self, month_id: str, verbose: bool) -> bool:
+    def load_model(self, mdl_upd_day: str, verbose: bool) -> bool:
         model_file = f"{self.save_id}.skops"
-        model_path = os.path.join(self.mclrn_mdl_dir, month_id, model_file)
+        model_path = os.path.join(self.mclrn_mdl_dir, mdl_upd_day, model_file)
         if os.path.exists(model_path):
             untrusted_types = sio.get_untrusted_types(file=model_path)
             self.fitted_estimator = sio.load(model_path, trusted=untrusted_types)
             return True
         else:
             if verbose:
-                logger.info(f"No model file for {SFY(self.save_id)} at {SFY(month_id)}")
+                logger.info(f"No model file for {SFY(self.save_id)} at {SFY(mdl_upd_day)}")
             return False
 
     def apply_estimator(self, x: pd.DataFrame) -> np.ndarray:
@@ -213,10 +213,9 @@ class CTestMclrn:
         return pd.Series(data=pred, name=self.y_col, index=idx).astype(np.float64)
 
     def train(self, model_update_day: str, calendar: CCalendar, verbose: bool):
-        model_update_month = model_update_day[0:6]
-        if self.check_model_existence(month_id=model_update_month) and verbose:
+        if self.check_model_existence(mdl_upd_day=model_update_day) and verbose:
             logger.info(
-                f"Model for {SFY(model_update_month)} @ {SFY(self.save_id)} have been calculated, "
+                f"Model for {SFY(model_update_day)} @ {SFY(self.save_id)} have been calculated, "
                 "program will skip it."
             )
             return 0
@@ -230,18 +229,17 @@ class CTestMclrn:
         x, y = self.get_X_y(aligned_data=trn_aligned_data)
         self.fit_estimator(x=x, y=y)
         self.display_fitted_estimator()
-        self.save_model(month_id=model_update_month)
+        self.save_model(mdl_upd_day=model_update_day)
         if verbose:
             logger.info(
-                f"Train model @ {SFG(model_update_day)}, "
+                f"Train and save model @ {SFG(model_update_day)}, "
                 f"factor selected @ {SFG(trn_e_date)}, "
                 f"using train data @ [{SFG(trn_b_date)},{SFG(trn_e_date)}], "
-                f"save as {SFG(model_update_month)}"
             )
         return 0
 
     def process_trn(self, agent_queue: CAgentQueue, bgn_date: str, stp_date: str, calendar: CCalendar, verbose: bool):
-        model_update_days = calendar.get_last_days_in_range(bgn_date=bgn_date, stp_date=stp_date)
+        model_update_days = calendar.get_week_end_days_in_range(bgn_date=bgn_date, stp_date=stp_date)
         agent_queue.set_description(f"{self.save_id:<48s} train")
         agent_queue.set_completed(0)
         agent_queue.set_total(len(model_update_days))
@@ -251,13 +249,11 @@ class CTestMclrn:
         return 0
 
     def predict(
-            self, prd_month_id: str, prd_month_days: list[str], calendar: CCalendar, verbose: bool,
+            self, mdl_upd_day: str, prd_week_days: list[str], calendar: CCalendar, verbose: bool,
     ) -> pd.Series:
-        trn_month_id = calendar.get_next_month(prd_month_id, -1)
         self.reset_estimator()
-        if self.load_model(month_id=trn_month_id, verbose=verbose):
-            model_update_day = calendar.get_last_day_of_month(trn_month_id)
-            prd_b_date, prd_e_date = prd_month_days[0], prd_month_days[-1]
+        if self.load_model(mdl_upd_day=mdl_upd_day, verbose=verbose):
+            prd_b_date, prd_e_date = prd_week_days[0], prd_week_days[-1]
             prd_s_date = calendar.get_next_date(prd_e_date, shift=1)
             prd_x_data = self.load_x(prd_b_date, prd_s_date)
             x_only_data = self.drop_and_fill_nan(prd_x_data)
@@ -265,12 +261,11 @@ class CTestMclrn:
             pred = self.apply_estimator(x=x)
             y_h_data = self.get_y_h(pred, idx=x_only_data.index)
             if verbose:
-                trn_e_date = calendar.get_next_date(model_update_day, shift=-self.test_data.ret.shift)
+                trn_e_date = calendar.get_next_date(mdl_upd_day, shift=-self.test_data.ret.shift)
                 logger.info(
-                    f"Call model @ {SFG(model_update_day)}, "
+                    f"Call model @ {SFG(mdl_upd_day)}, "
                     f"factor selected @ {SFG(trn_e_date)}, "
                     f"prediction @ [{SFG(prd_b_date)},{SFG(prd_e_date)}], "
-                    f"load model from {SFG(trn_month_id)}"
                 )
             return y_h_data
         else:
@@ -279,13 +274,18 @@ class CTestMclrn:
     def process_prd(
             self, agent_queue: CAgentQueue, bgn_date: str, stp_date: str, calendar: CCalendar, verbose: bool,
     ) -> pd.DataFrame:
-        months_groups = calendar.split_by_month(dates=calendar.get_iter_list(bgn_date, stp_date))
+        upd_days_groups: dict[str, list[str]] = calendar.split_by_week_end_days(
+            dates=calendar.get_iter_list(bgn_date, stp_date),
+            week_end_days=calendar.get_week_end_days_in_range(bgn_date, stp_date),
+        )
         agent_queue.set_description(f"{self.save_id:<48s} predict")
         agent_queue.set_completed(0)
-        agent_queue.set_total(len(months_groups))
+        agent_queue.set_total(len(upd_days_groups))
         pred_res: list[pd.Series] = []
-        for prd_month_id, prd_month_days in months_groups.items():
-            month_prediction = self.predict(prd_month_id, prd_month_days, calendar, verbose)
+        for mdl_upd_day, prd_week_days in upd_days_groups.items():
+            if not prd_week_days:
+                continue
+            month_prediction = self.predict(mdl_upd_day, prd_week_days, calendar, verbose)
             pred_res.append(month_prediction)
             agent_queue.set_advance(advance=1)
         prediction = pd.concat(pred_res, axis=0, ignore_index=False)
