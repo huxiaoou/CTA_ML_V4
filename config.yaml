@@ -319,7 +319,7 @@ factors_universe_options:
 # ------- models -------
 test_models:
   - model_type: BASELINE
-    trn_win: 60
+    trn_win: 30
     using_instru: false
     classification: false
     cv: 0
