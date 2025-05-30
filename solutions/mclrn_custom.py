@@ -43,11 +43,15 @@ class BaseLine:
             sd = ic.std()
             coe = mu / sd.where(sd > 0, np.nan)
         else:
+            # # method 0
             # scale = np.sqrt(mu.abs())
             # coe = mu / scale.where(scale > 0, np.nan)
-            # coe = np.sign(mu)
 
-            rnk = mu.rank()
-            wgt = np.power(rnk, 0.25)
-            coe = wgt / wgt.sum()
+            # method 1
+            coe = np.sign(mu)
+
+            # method 2
+            # rnk = mu.rank()
+            # wgt = np.power(rnk, 0.25)
+            # coe = wgt / wgt.sum()
         return BaseLineEstimator(coe=coe.fillna(0))
