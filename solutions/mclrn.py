@@ -365,7 +365,7 @@ Part III: Specific class for Machine Learning
 class CTestMclrnBaseLine(CTestMclrnReg):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.prototype = BaseLine(icir=False)
+        self.prototype = BaseLine(method="IR")
 
     def display_fitted_estimator(self) -> None:
         text = f"{self.save_id:<52s}| score = [{self.trn_score:>7.4f}]/[{self.val_score:>7.4f}]"

@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.metrics import r2_score
+from typing import Literal
 
 
 class BaseLineEstimator:
@@ -32,26 +33,26 @@ class BaseLineEstimator:
 
 
 class BaseLine:
-    def __init__(self, icir: bool):
-        self.icir = icir
+    def __init__(self, method: Literal["IC", "IR", "SGN", "RNK"]):
+        self.method = method
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> BaseLineEstimator:
         data = pd.concat([X, y], axis=1, ignore_index=False)
         ic = data.groupby(by="trade_date").apply(lambda z: z.iloc[:, :-1].corrwith(z.iloc[:, -1]))
         mu = ic.mean()
-        if self.icir:
-            sd = ic.std()
-            coe = mu / sd.where(sd > 0, np.nan)
-        else:
-            # method 0
+
+        if self.method == "IC":
             scale = np.sqrt(mu.abs())
             coe = mu / scale.where(scale > 0, np.nan)
-
-            # method 1
-            # coe = np.sign(mu)
-
-            # method 2
-            # rnk = mu.rank()
-            # wgt = np.power(rnk, 0.25)
-            # coe = wgt / wgt.sum()
+        elif self.method == "IR":
+            sd = ic.std()
+            coe = mu / sd.where(sd > 0, np.nan)
+        elif self.method == "SGN":
+            coe = np.sign(mu)
+        elif self.method == "RNK":
+            rnk = mu.rank()
+            wgt = np.power(rnk, 0.25)
+            coe = wgt / wgt.sum()
+        else:
+            raise ValueError(f"Invalid method: {self.method}")
         return BaseLineEstimator(coe=coe.fillna(0))
