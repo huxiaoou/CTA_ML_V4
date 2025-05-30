@@ -43,12 +43,12 @@ class BaseLine:
             sd = ic.std()
             coe = mu / sd.where(sd > 0, np.nan)
         else:
-            # # method 0
-            # scale = np.sqrt(mu.abs())
-            # coe = mu / scale.where(scale > 0, np.nan)
+            # method 0
+            scale = np.sqrt(mu.abs())
+            coe = mu / scale.where(scale > 0, np.nan)
 
             # method 1
-            coe = np.sign(mu)
+            # coe = np.sign(mu)
 
             # method 2
             # rnk = mu.rank()
