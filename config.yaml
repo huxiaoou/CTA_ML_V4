@@ -395,8 +395,8 @@ test_models:
     hyper_param_grids:
       boosting_type: [ "gbdt" ]
       n_estimators: [ 50 ]
-      max_depth: [ 2, 3 ]
-      max_leaves: [ 3, 7 ]
+      max_depth: [ 2, ]
+      max_leaves: [ 3, ]
       learning_rate: [ 0.01, 0.05, 0.1 ]
       metric: [ "binary_logloss" ] # ["l1", "l2"] for regressor, ["binary_logloss"] for classifier
   - model_type: XGB
@@ -408,8 +408,8 @@ test_models:
     hyper_param_grids:
       booster: [ "gbtree" ] # ["gbtree", "gblinear", "dart"]
       n_estimators: [ 50 ]
-      max_depth: [ 2, 3 ]
-      max_leaves: [ 3, 7 ]
+      max_depth: [ 2 ]
+      max_leaves: [ 3 ]
       learning_rate: [ 0.01, 0.05, 0.1 ]
       objective: [ "binary:logistic" ] # ["reg:squarederror", "reg:absoluteerror", "binary:logistic"]
 CONST:
