@@ -387,29 +387,29 @@ test_models:
   #      hidden_layer_sizes: [ [ 3, 3, 3 ], [ 5, 5, 5 ], [ 8, 8, 8 ] ]
   #      alpha: [ 0.01, 0.001 ]
   - model_type: LGBM
-    trn_win: 20
+    trn_win: 240
     using_instru: true
     classification: true
     cv: 5
-    early_stopping: 10
+    early_stopping: 5
     hyper_param_grids:
       boosting_type: [ "gbdt" ]
-      n_estimators: [ 100 ]
-      max_depth: [ 2, 3, 4 ]
-      max_leaves: [ 3, 7, 15 ]
+      n_estimators: [ 50 ]
+      max_depth: [ 2, 3 ]
+      max_leaves: [ 3, 7 ]
       learning_rate: [ 0.01, 0.05, 0.1 ]
       metric: [ "binary_logloss" ] # ["l1", "l2"] for regressor, ["binary_logloss"] for classifier
   - model_type: XGB
-    trn_win: 20
+    trn_win: 240
     using_instru: true
     classification: true
     cv: 5
-    early_stopping: 10
+    early_stopping: 5
     hyper_param_grids:
       booster: [ "gbtree" ] # ["gbtree", "gblinear", "dart"]
-      n_estimators: [ 100 ]
-      max_depth: [ 2, 3, 4 ]
-      max_leaves: [ 3, 7, 15 ]
+      n_estimators: [ 50 ]
+      max_depth: [ 2, 3 ]
+      max_leaves: [ 3, 7 ]
       learning_rate: [ 0.01, 0.05, 0.1 ]
       objective: [ "binary:logistic" ] # ["reg:squarederror", "reg:absoluteerror", "binary:logistic"]
 CONST:
