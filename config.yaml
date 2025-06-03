@@ -238,6 +238,8 @@ factors:
   MPC:
     wins: [ 60, 120, 180 ]
     lbds: [ 0.80, 1.00 ]
+  VAL:
+    wins: [ 10, 20, 60, 120, 240 ]
 
 # ------- factors universe -------
 factors_universe_options:
