@@ -391,10 +391,10 @@ test_models:
     using_instru: true
     classification: true
     cv: 5
-    early_stopping: 5
+    early_stopping: 10
     hyper_param_grids:
       boosting_type: [ "gbdt" ]
-      n_estimators: [ 50 ]
+      n_estimators: [ 100 ]
       max_depth: [ 2, ]
       max_leaves: [ 3, ]
       learning_rate: [ 0.01, 0.05, 0.1 ]
@@ -404,10 +404,10 @@ test_models:
     using_instru: true
     classification: true
     cv: 5
-    early_stopping: 5
+    early_stopping: 10
     hyper_param_grids:
       booster: [ "gbtree" ] # ["gbtree", "gblinear", "dart"]
-      n_estimators: [ 50 ]
+      n_estimators: [ 100 ]
       max_depth: [ 2 ]
       max_leaves: [ 3 ]
       learning_rate: [ 0.01, 0.05, 0.1 ]
