@@ -269,6 +269,7 @@ factors_universe_options:
       - [ S0BETA, S0BETA020 ]
       - [ ONR, ONR120 ]
       - [ MPH, MPH120L80 ]
+      - [ VAL, VALDIF ]
     Cls:
       - [ MTM, MTMDIF ]
       - [ SKEW, SKEW120 ]
@@ -287,6 +288,7 @@ factors_universe_options:
       - [ S0BETA, S0BETA020 ]
       - [ ONR, ONR120 ]
       - [ MPH, MPH120L80 ]
+      - [ VAL, VALDIF ]
   neu:
     Opn:
       - [ MTM, MTMDIF ]
@@ -306,6 +308,7 @@ factors_universe_options:
       - [ NPLS, NPLSDIF ]
       - [ S0BETA, S0BETA020 ]
       - [ ONR, ONR120 ]
+      - [ VAL, VALDIF ]
     Cls:
       - [ MTM, MTMDIF ]
       - [ SKEW, SKEW020D ]
@@ -323,6 +326,7 @@ factors_universe_options:
       - [ NPLS, NPLSDIF ]
       - [ S0BETA, S0BETA020 ]
       - [ ONR, ONR120 ]
+      - [ VAL, VALDIF ]
 
 # ------- models -------
 test_models:
