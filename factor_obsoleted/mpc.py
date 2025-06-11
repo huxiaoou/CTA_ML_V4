@@ -1,3 +1,7 @@
+"""
+mpc: Member Position Change
+"""
+
 import pandas as pd
 from husfort.qcalendar import CCalendar
 from typedefs.typedefFactors import CCfgFactorGrpWinLambda
