@@ -1,6 +1,6 @@
 import pandas as pd
 from husfort.qcalendar import CCalendar
-from typedefs.typedefFactors import CCfgFactorGrpWin, TFactorNames
+from typedefs.typedefFactors import CCfgFactorGrpWin, TFactorNames, TFactorName
 from solutions.factor import CFactorsByInstru
 from math_tools.rolling import cal_rolling_beta
 
@@ -9,9 +9,16 @@ class CCfgFactorGrpS0BETA(CCfgFactorGrpWin):
     def __init__(self, **kwargs):
         super().__init__(factor_class="S0BETA", **kwargs)
 
+    def name_diff2(self) -> TFactorName:
+        return TFactorName(f"{self.factor_class}DIFF2")
+
+    @property
+    def names_diff(self) -> TFactorNames:
+        return [self.name_diff(), self.name_diff2()]
+
     @property
     def factor_names(self) -> TFactorNames:
-        return self.names_vanilla + self.names_res
+        return self.names_vanilla + self.names_res + self.names_diff
 
 
 class CFactorS0BETA(CFactorsByInstru):
@@ -38,7 +45,13 @@ class CFactorS0BETA(CFactorsByInstru):
                 self.cfg.wins, self.cfg.names_vanilla, self.cfg.names_res
         ):
             adj_data[name_vanilla] = cal_rolling_beta(df=adj_data, x=self.x, y=self.y, rolling_window=win)
-            adj_data[name_res] = adj_data[self.y] - adj_data[name_vanilla] * adj_data[self.x]
+            adj_data[name_res] = -(adj_data[self.y] - adj_data[name_vanilla] * adj_data[self.x])
+
+        w = 20
+        n0, n1 = self.cfg.name_vanilla(w), self.cfg.name_res(w)  # BETA20, RES20
+        adj_data[self.cfg.name_diff()] = adj_data[n0] + adj_data[n1]
+        adj_data[self.cfg.name_diff2()] = adj_data[n0] * adj_data[self.x].abs() + adj_data[n1]
+
         self.rename_ticker(adj_data)
         factor_data = self.get_factor_data(adj_data, bgn_date)
         return factor_data
