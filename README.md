@@ -54,9 +54,9 @@ make sure the algorithm of each factor is symmetrical about 0
     + F1_NEU_Cls001L1_NEU.pdf
     + ...
 
-## 1.2. Steps to add new factor
+## 1.2. Steps to add a new factor
 
-+ suppose new factor class is 'XYZ'
++ suppose the new factor class is 'XYZ'
 + create a file with name = 'xyz.py' in './factor_algs'
 + **Optional Step 1** create a new subclass of CCfgFactorGrp in './typedefs/typedefFactors.py', if necessary.
 + **Optional Step 2** create a new subclass of CCfgFactorGrp in './solutions/factor.py', if necessary.
@@ -64,10 +64,11 @@ make sure the algorithm of each factor is symmetrical about 0
     + CCfgFactorGrpWin
     + CCfgFactorGrpWinLambda
     + CCfgFactorGrpLambda
-+ give definition of 'CFactorMF' in xyz.py , it should inherit from new subclass created in **optional step 2** OR using existing ones, like
++ give definition of 'CFactorXYZ' in xyz.py, it should inherit from new subclass created in **optional step 2** OR using existing ones, like
     + CFactorsByInstru
     + CFactorCORR
-+ update run_all.ps1. If this factor has a good performance in IC test, and we want keep it for further usage.
++ give args definition in 'factors' module of config.yaml
++ update run_all.ps1. If this factor has a good performance in IC test, and we want to keep it for further usage.
     + `python main.py --bgn $bgn_date_factor --stp $stp_date factor --fclass XYZ`
     + `python main.py --bgn $bgn_date --stp $stp_date ic --fclass XYZ`
 
